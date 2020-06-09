@@ -2,4 +2,10 @@ project(Silo)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Silo main.cpp)
+file(GLOB_RECURSE PROJECT_SOURCES *.cpp)
+file(GLOB_RECURSE PROJECT_HEADERS *.h)
+
+add_executable( ${PROJECT_NAME}
+    ${PROJECT_SOURCES}
+    ${PROJECT_HEADERS}
+)
