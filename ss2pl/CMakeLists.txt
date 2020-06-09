@@ -1,0 +1,5 @@
+project(SS2PL)
+
+set(CMAKE_CXX_STANDARD 20)
+
+add_executable(SS2PL main.cpp)
