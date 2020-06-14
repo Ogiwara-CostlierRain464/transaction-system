@@ -35,6 +35,11 @@ private:
   std::vector<WriteElement<Tuple>> writeSet;
   std::vector<Step> steps;
   TXNStatus status;
+
+  TidWord maxReadTid, maxWriteTid;
+
+  char writeValues[VALUE_SIZE];
+  char returnValues[VALUE_SIZE];
 };
 
 

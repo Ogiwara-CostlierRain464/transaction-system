@@ -10,6 +10,8 @@
  * http://xoroshiro.di.unimi.it/xoroshiro128plus.c
  *
  * And Tanabe Takayuki custmized.
+ *
+ * 0.72ns で一つの乱数が生成できる
  */
 class Xoroshiro128Plus {
 public:

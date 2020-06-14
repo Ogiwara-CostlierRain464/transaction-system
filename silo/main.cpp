@@ -7,6 +7,8 @@
 #include "consts.h"
 #include "atomic_wrapper.h"
 #include "helper.h"
+#include "random.h"
+#include "txn_executor.h"
 
 using std::cout;
 using std::endl;
@@ -18,6 +20,10 @@ void worker(
   char &ready,
   const bool &start,
   const bool &quit){
+  Xoroshiro128Plus random{};
+  random.init();
+  TXNExecutor txnExecutor(threadID);
+
 
   storeRelease(ready, 1);
   while(!loadAcquire(start)) _mm_pause();
