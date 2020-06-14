@@ -4,7 +4,8 @@
 /**
  * 各種定数をここにまとめる
  */
-#define CACHE_LINE_SIZE 64
-#define VALUE_SIZE 4
+constexpr int CACHE_LINE_SIZE = 64;
+constexpr int VALUE_SIZE = 4;
+constexpr int THREAD_NUM = 200;
 
 #endif //TRANSACTIONSYSTEM_CONSTS_H
