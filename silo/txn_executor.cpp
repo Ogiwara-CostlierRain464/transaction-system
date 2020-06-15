@@ -186,3 +186,24 @@ bool TXNExecutor::validationPhase() {
   status = Committed;
   return true;
 }
+
+void TXNExecutor::write(uint64_t key) {
+  // re-writeを防ぐ
+  if(searchWriteSet(key)) return;
+
+  // TODO: implement each step (a)~(c).
+  Tuple *tuple;
+  ReadElement<Tuple> *re;
+  re = searchReadSet(key);
+  if(re){
+    tuple = re->recordPtr;
+  }else{
+    tuple = &Table[key];
+  }
+
+  writeSet.emplace_back(key, tuple);
+}
+
+void TXNExecutor::writePhase() {
+  // TODO
+}
