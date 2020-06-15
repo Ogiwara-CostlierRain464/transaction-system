@@ -2,7 +2,7 @@
 #define TRANSACTIONSYSTEM_TUPLE_H
 
 #include <cstdint>
-#include "consts.h"
+#include "common.h"
 
 /**
  * TID wordを指す

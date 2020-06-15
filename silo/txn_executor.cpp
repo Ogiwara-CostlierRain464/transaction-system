@@ -84,5 +84,12 @@ void TXNExecutor::lockWriteSet() {
 void TXNExecutor::read(uint64_t key) {
   TidWord expected, check;
 
+  /**
+   * read-own-writesとre-read form local read setを防ぐ
+   */
+  if(searchReadSet(key) || searchWriteSet(key)){
+    return;
+  }
 
+  Tuple *tuple;
 }
