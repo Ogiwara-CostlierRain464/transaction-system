@@ -1,12 +1,11 @@
 #ifndef TRANSACTIONSYSTEM_ATOMIC_WRAPPER_H
 #define TRANSACTIONSYSTEM_ATOMIC_WRAPPER_H
-
 /**
  * Wrappers of atomic built-in.
  *
  * @see https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
  * @see https://yohhoy.hatenablog.jp/entry/2014/12/21/171035
- *
+ * @see http://web.mit.edu/6.173/www/currentsemester/readings/R06-scalable-synchronization-1991.pdf
  */
 
 template <typename T>
