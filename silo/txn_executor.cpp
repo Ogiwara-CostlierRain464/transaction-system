@@ -125,3 +125,26 @@ void TXNExecutor::read(uint64_t key) {
 
   readSet.emplace_back(key, tuple, returnValue, expected);
 }
+
+ReadElement<Tuple> *TXNExecutor::searchReadSet(uint64_t key) {
+  // linear search
+  for(auto &op: readSet){
+    if(op.key == key) return &op;
+  }
+  return nullptr;
+}
+
+WriteElement<Tuple> *TXNExecutor::searchWriteSet(uint64_t key) {
+  // linear search
+  for(auto &op: writeSet){
+    if(op.key == key) return &op;
+  }
+  return nullptr;
+}
+
+void TXNExecutor::unlockWriteSet() {
+  TidWord expected, desired;
+
+  for(auto &op: writeSet){
+  }
+}
