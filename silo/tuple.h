@@ -10,7 +10,7 @@
  */
 struct TidWord{
   union {
-    uint64_t obj;
+    uint64_t body;
     struct {
       bool lock: 1{};
       bool latest: 1{};
@@ -20,17 +20,17 @@ struct TidWord{
     };
   };
 
-  TidWord(): obj(0){};
+  TidWord(): body(0){};
 
   bool operator==(const TidWord &rhs)const{
-    return obj == rhs.obj;
+    return body == rhs.body;
   }
   bool operator!=(const TidWord &rhs)const{
     return !(*this == rhs);
   }
 
   bool operator<(const TidWord &rhs)const{
-    return obj < rhs.obj;
+    return body < rhs.body;
   }
 };
 

@@ -30,3 +30,39 @@ TEST_F(Features, std_ref){
   reference_wrapper<int> arr[] = {x, y, z};
 }
 
+TEST_F(Features, asm_ext_basic){
+  int src = 1;
+  int dst;
+  asm("mov %1, %0\n\t"
+      "add $1, %0"
+      : "=r" (dst)  // output operands
+      : "r" (src)); // input operands
+
+  EXPECT_EQ(dst, 2);
+}
+
+TEST_F(Features, asm_volatile){
+  uint64_t msr;
+  asm volatile (
+    "rdtsc\n\t"
+    "shl $32, %%rdx\n\t"
+    "or %%rdx, %0"
+    : "=a" (msr)
+    :
+    : "rdx"
+    );
+
+  printf("%lld\n", msr);
+
+  asm volatile (
+  "rdtsc\n\t"
+  "shl $32, %%rdx\n\t"
+  "or %%rdx, %0"
+  : "=a" (msr)
+  :
+  : "rdx"
+  );
+
+  printf("%lld\n", msr);
+}
+

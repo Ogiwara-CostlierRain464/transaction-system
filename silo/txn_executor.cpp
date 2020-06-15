@@ -29,8 +29,8 @@ TXNExecutor::TXNExecutor(size_t threadId)
   writeSet.reserve(MAX_OPERATIONS);
   steps.reserve(MAX_OPERATIONS);
 
-  maxReadTid.obj = 0;
-  maxWriteTid.obj = 0;
+  maxReadTid.body = 0;
+  maxWriteTid.body = 0;
 
   genStringRepeatedNumber(writeValue, VALUE_SIZE, threadId);
 }
@@ -42,8 +42,8 @@ void TXNExecutor::abort() {
 
 void TXNExecutor::begin() {
   status = Active;
-  maxReadTid.obj = 0;
-  maxWriteTid.obj = 0;
+  maxReadTid.body = 0;
+  maxWriteTid.body = 0;
 }
 
 void TXNExecutor::displayWriteSet() {
@@ -58,17 +58,17 @@ void TXNExecutor::lockWriteSet() {
   TidWord expected, desired;
 
   for(auto &itr : writeSet){
-    expected.obj = loadAcquire(itr.recordPtr->tidWord.obj);
+    expected.body = loadAcquire(itr.recordPtr->tidWord.body);
 
     // Wait until could acquire lock.
     for(;;){
       if(expected.lock){
-        expected.obj = loadAcquire(itr.recordPtr->tidWord.obj);
+        expected.body = loadAcquire(itr.recordPtr->tidWord.body);
       } else{
         desired = expected;
         desired.lock = true;
         // lockを確保を試みる
-        if(compareExchange(itr.recordPtr->tidWord.obj, expected.obj, desired.obj)){
+        if(compareExchange(itr.recordPtr->tidWord.body, expected.body, desired.body)){
           break;
         }
       }
@@ -93,13 +93,13 @@ void TXNExecutor::read(uint64_t key) {
 
   Tuple *tuple = &Table[key];
 
-  expected.obj = loadAcquire(tuple->tidWord.obj);
+  expected.body = loadAcquire(tuple->tidWord.body);
 
   for(;;) {
 
     // (a) reads the TID word, spinning until the lock is clear.
     while (expected.lock) {
-      expected.obj = loadAcquire(tuple->tidWord.obj);
+      expected.body = loadAcquire(tuple->tidWord.body);
     }
 
     // (b) checks whether the record is the latest version.
@@ -115,7 +115,7 @@ void TXNExecutor::read(uint64_t key) {
     // If the record is not the latest version in step (b)
     // or the TID word changes between steps (a) and (e),
     // the worker must retry or abort.
-    check.obj = loadAcquire(tuple->tidWord.obj);
+    check.body = loadAcquire(tuple->tidWord.body);
     if (expected == check){
       break; // TID didn't change
     }else{
@@ -146,5 +146,22 @@ void TXNExecutor::unlockWriteSet() {
   TidWord expected, desired;
 
   for(auto &op: writeSet){
+    expected.body = loadAcquire(op.recordPtr->tidWord.body);
+    desired = expected;
+    desired.lock = false;
+    storeRelease(op.recordPtr->tidWord.body, desired.body);
   }
+}
+
+/**
+ * cf. P6
+ */
+bool TXNExecutor::validationPhase() {
+  // Phase 1
+  std::sort(writeSet.begin(), writeSet.end());
+  lockWriteSet();
+
+  asm volatile("" ::: "memory");
+
+  asm volatile("" ::: "memory");
 }

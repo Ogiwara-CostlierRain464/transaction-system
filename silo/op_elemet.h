@@ -28,7 +28,7 @@ public:
     TidWord tidWord_)
   : OpElement<T>::OpElement(key, recordPtr)
   {
-    tidWord.obj = tidWord_.obj;
+    tidWord.body = tidWord_.body;
     memcpy(value, value_, VALUE_SIZE);
   }
 

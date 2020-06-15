@@ -18,9 +18,9 @@ struct uint64_t_64byte{
   uint64_t_64byte(uint64_t init): obj(init){}
 };
 
+alignas(CACHE_LINE_SIZE) uint64_t_64byte GlobalEpoch;
 alignas(CACHE_LINE_SIZE) uint64_t_64byte *ThreadLocalEpochs;
 alignas(CACHE_LINE_SIZE) uint64_t_64byte *CTIDW;
-
 struct Tuple;
 alignas(CACHE_LINE_SIZE) Tuple *Table;
 

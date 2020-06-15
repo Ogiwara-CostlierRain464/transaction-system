@@ -35,5 +35,9 @@ bool compareExchange(T& m, T& before, T2 after) {
     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
 }
 
+inline uint64_t loadGlobalEpochAtomic(){
+//  uint64_t_64byte result =
+//    __atomic_load_n(GlobalEpoch.obj)
+}
 
 #endif //TRANSACTIONSYSTEM_ATOMIC_WRAPPER_H

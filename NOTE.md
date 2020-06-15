@@ -10,3 +10,6 @@ https://yohhoy.hatenablog.jp/entry/2014/12/21/171035
 
 # posix_memalign
 https://kazmax.zpp.jp/cmd/p/posix_memalign.3.html
+
+# Extended Asm
+https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html
