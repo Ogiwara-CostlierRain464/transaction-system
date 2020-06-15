@@ -68,15 +68,44 @@ void worker(
   char &ready,
   const bool &start,
   const bool &quit){
+  // result
   Xoroshiro128Plus random{};
   random.init();
   TXNExecutor txnExecutor(threadID);
 
+  // Workerの準備が完了したことを伝える
   storeRelease(ready, 1);
+  // startになるまでspin lock
   while(!loadAcquire(start)) _mm_pause();
 
+  // quitになるまでWorkerを実行
   while(!loadAcquire(quit)){
+    // do some staff...
 
+RETRY:
+
+    if(loadAcquire(quit)) break;
+
+    txnExecutor.begin();
+    for(auto &op: txnExecutor.steps){
+      switch(op.operation){
+        case Operation::Read:
+          txnExecutor.read(op.key);
+          break;
+        case Operation::Write:
+          txnExecutor.write(op.key);
+          break;
+        default:
+          ERR;
+      }
+    }
+
+    if(txnExecutor.validationPhase()){
+      //
+    }else{
+      txnExecutor.abort();
+      goto RETRY;
+    }
   }
 }
 

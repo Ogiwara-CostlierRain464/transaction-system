@@ -42,11 +42,11 @@ public:
   void write(uint64_t key);
   void writePhase();
 
+  std::vector<Step> steps;
 private:
   size_t threadId;
   std::vector<ReadElement<Tuple>> readSet;
   std::vector<WriteElement<Tuple>> writeSet;
-  std::vector<Step> steps;
   TXNStatus status;
 
   TidWord maxReadTid, maxWriteTid;

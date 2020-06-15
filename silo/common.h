@@ -1,6 +1,8 @@
 #ifndef TRANSACTIONSYSTEM_COMMON_H
 #define TRANSACTIONSYSTEM_COMMON_H
 
+#include "result.h"
+
 /**
  * 各種定数、共有変数をここにまとめる
  */
@@ -23,6 +25,8 @@ alignas(CACHE_LINE_SIZE) uint64_t_64byte *ThreadLocalEpochs;
 alignas(CACHE_LINE_SIZE) uint64_t_64byte *CTIDW;
 struct Tuple;
 alignas(CACHE_LINE_SIZE) Tuple *Table;
+
+std::vector<Result> SiloResult;
 
 
 
