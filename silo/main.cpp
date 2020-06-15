@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <pthread.h>
 #include <vector>
 #include <thread>
@@ -16,7 +15,7 @@ using std::ref;
 using std::string;
 
 void worker(
-  int threadID,
+  size_t threadID,
   char &ready,
   const bool &start,
   const bool &quit){
@@ -41,7 +40,7 @@ int main(){
   std::vector<std::thread> threads;
   threads.reserve(THREAD_NUM);
 
-  for(int i = 0; i < THREAD_NUM; i++){
+  for(size_t i = 0; i < THREAD_NUM; i++){
     threads.emplace_back(worker,
       i, ref(readFlags[i]), ref(start), ref(quit));
   }

@@ -4,9 +4,9 @@
 /**
  * 各種定数をここにまとめる
  */
-constexpr int CACHE_LINE_SIZE = 64;
-constexpr int VALUE_SIZE = 4;
-constexpr int THREAD_NUM = 4;
-constexpr int MAX_OPERATIONS = 10;
+constexpr size_t CACHE_LINE_SIZE = 64;
+constexpr size_t VALUE_SIZE = 4;
+constexpr size_t THREAD_NUM = 4;
+constexpr size_t MAX_OPERATIONS = 10;
 
 #endif //TRANSACTIONSYSTEM_CONSTS_H

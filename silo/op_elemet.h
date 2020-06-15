@@ -6,16 +6,14 @@
 #include "tuple.h"
 
 template <typename T>
-class OpElement{
-public:
+struct OpElement{
+  uint64_t key;
+  T *recordPtr;
+
   OpElement(): key(0), recordPtr(nullptr){}
   explicit OpElement(uint64_t key): key(key){}
   OpElement(uint64_t key, T* recordPtr)
   : key(key), recordPtr(recordPtr){}
-
-private:
-  uint64_t key;
-  T *recordPtr;
 };
 
 template <typename T>

@@ -11,7 +11,7 @@
  * TXN Status.
  * @see TXN System P128
  */
-enum class TXNStatus: uint8_t {
+enum TXNStatus{
   Active, Committed, Aborted
 };
 
@@ -21,13 +21,26 @@ enum class TXNStatus: uint8_t {
  */
 class TXNExecutor {
 public:
-  TXNExecutor(size_t threadId);
+  explicit TXNExecutor(size_t threadId);
 
   void abort();
   void begin();
   void displayWriteSet();
   void lockWriteSet();
-  void read();
+  void read(uint64_t key);
+  /**
+   * Search element of local set corresponding to given key.
+   *
+   */
+  ReadElement<Tuple> *searchReadSet(uint64_t key);
+  WriteElement<Tuple> *searchWriteSet(uint64_t key);
+
+  void unlockWriteSet();
+
+  bool validationPhase();
+
+  void write(uint64_t key);
+  void writePhase();
 
 private:
   size_t threadId;
@@ -38,8 +51,8 @@ private:
 
   TidWord maxReadTid, maxWriteTid;
 
-  char writeValues[VALUE_SIZE];
-  char returnValues[VALUE_SIZE];
+  char writeValue[VALUE_SIZE];
+  char returnValue[VALUE_SIZE];
 };
 
 
