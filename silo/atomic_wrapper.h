@@ -35,9 +35,19 @@ bool compareExchange(T& m, T& before, T2 after) {
     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
 }
 
-inline uint64_t loadGlobalEpochAtomic(){
-//  uint64_t_64byte result =
-//    __atomic_load_n(GlobalEpoch.obj)
+inline uint64_t atomicLoadGlobalEpoch(){
+  uint64_t_64byte result =
+    __atomic_load_n(&(GlobalEpoch.body), __ATOMIC_ACQUIRE);
+  return result.body;
 }
+
+inline void atomicStoreThreadLocalEpoch(
+  size_t threadID, uint64_t newVal){
+  __atomic_store_n(
+    &(ThreadLocalEpochs[threadID].body),
+    newVal,
+    __ATOMIC_RELEASE);
+}
+
 
 #endif //TRANSACTIONSYSTEM_ATOMIC_WRAPPER_H

@@ -154,7 +154,7 @@ void TXNExecutor::unlockWriteSet() {
 }
 
 /**
- * cf. P6
+ * cf. P6 Figure 2
  */
 bool TXNExecutor::validationPhase() {
   // Phase 1
@@ -162,6 +162,27 @@ bool TXNExecutor::validationPhase() {
   lockWriteSet();
 
   asm volatile("" ::: "memory");
-
+  atomicStoreThreadLocalEpoch(threadId, atomicLoadGlobalEpoch());
   asm volatile("" ::: "memory");
+
+  // Phase 2
+  TidWord check;
+  for(auto &op: readSet){
+    check.body = loadAcquire(op.recordPtr->tidWord.body);
+    if(op.tidWord.tid != check.tid
+    // || !check.latest
+    || (check.lock && !searchWriteSet(op.key))
+    || op.tidWord.epoch != check.epoch){
+      // abort
+      status = Aborted;
+      unlockWriteSet();
+      return false;
+    }
+    maxReadTid = std::max(maxReadTid, check);
+  }
+
+  // Phase 3
+  // NOTE: code is omitted in original?
+  status = Committed;
+  return true;
 }

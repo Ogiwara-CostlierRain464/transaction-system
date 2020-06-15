@@ -12,10 +12,10 @@ constexpr size_t PAGE_SIZE = 4096;
 constexpr size_t TUPLE_NUM = 1000000;
 
 struct uint64_t_64byte{
-  alignas(CACHE_LINE_SIZE) uint64_t obj;
+  alignas(CACHE_LINE_SIZE) uint64_t body;
 
-  uint64_t_64byte(): obj(0){}
-  uint64_t_64byte(uint64_t init): obj(init){}
+  uint64_t_64byte(): body(0){}
+  uint64_t_64byte(uint64_t init): body(init){}
 };
 
 alignas(CACHE_LINE_SIZE) uint64_t_64byte GlobalEpoch;

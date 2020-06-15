@@ -17,9 +17,11 @@ struct OpElement{
 };
 
 template <typename T>
-class ReadElement: public OpElement<T>{
-public:
+struct ReadElement: public OpElement<T>{
   using OpElement<T>::OpElement;
+
+  TidWord tidWord;
+  char value[VALUE_SIZE]{};
 
   ReadElement(
     uint64_t key,
@@ -35,10 +37,6 @@ public:
   bool operator<(const ReadElement &rhs)const{
     return this->key < rhs.key;
   }
-
-private:
-  TidWord tidWord;
-  char value[VALUE_SIZE]{};
 };
 
 template <typename T>
