@@ -72,7 +72,6 @@ void worker(
   random.init();
   TXNExecutor txnExecutor(threadID);
 
-
   storeRelease(ready, 1);
   while(!loadAcquire(start)) _mm_pause();
 

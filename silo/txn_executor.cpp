@@ -91,5 +91,37 @@ void TXNExecutor::read(uint64_t key) {
     return;
   }
 
-  Tuple *tuple;
+  Tuple *tuple = &Table[key];
+
+  expected.obj = loadAcquire(tuple->tidWord.obj);
+
+  for(;;) {
+
+    // (a) reads the TID word, spinning until the lock is clear.
+    while (expected.lock) {
+      expected.obj = loadAcquire(tuple->tidWord.obj);
+    }
+
+    // (b) checks whether the record is the latest version.
+    ; // This repository is implemented by single version, thus omitted
+
+    // (c) reads the data
+    memcpy(returnValue, tuple->value, VALUE_SIZE);
+
+    // (d) performs a memory fence
+    ; // Order of load doesn't exchange, thus not needed.
+
+    // (e) checks the TID word again.
+    // If the record is not the latest version in step (b)
+    // or the TID word changes between steps (a) and (e),
+    // the worker must retry or abort.
+    check.obj = loadAcquire(tuple->tidWord.obj);
+    if (expected == check){
+      break; // TID didn't change
+    }else{
+      continue; // TID changes, so retry.
+    }
+  }
+
+  readSet.emplace_back(key, tuple, returnValue, expected);
 }
