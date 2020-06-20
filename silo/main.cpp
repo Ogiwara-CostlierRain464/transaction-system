@@ -86,8 +86,6 @@ void worker(
 
   makeSteps(txnExecutor.steps, random, zipf, TUPLE_NUM, MAX_OPERATIONS, RATIO, result);
 RETRY:
-
-
     if(threadID == 0){
       // step epoch time
       stepEpochTime(epochTimerStart, epochTimerStop);
@@ -97,7 +95,6 @@ RETRY:
 
     txnExecutor.begin();
     for(auto &op: txnExecutor.steps){
-
       switch(op.operation){
         case Operation::Read:
           txnExecutor.read(op.key);

@@ -85,7 +85,6 @@ void TXNExecutor::lockWriteSet() {
  */
 void TXNExecutor::read(uint64_t key) {
   TidWord expected, check;
-
   /**
    * read-own-writesとre-read form local read setを防ぐ
    */
@@ -94,7 +93,6 @@ void TXNExecutor::read(uint64_t key) {
   }
 
   Tuple *tuple = &Table[key];
-
   expected.body = loadAcquire(tuple->tidWord.body);
 
   for(;;) {
