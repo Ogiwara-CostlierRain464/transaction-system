@@ -193,7 +193,7 @@ void TXNExecutor::write(uint64_t key) {
   // re-writeを防ぐ
   if(searchWriteSet(key)) return;
 
-  // TODO: implement each step (a)~(c).
+  // NOTE: later, implement each step (a)~(c).
   Tuple *tuple;
   ReadElement<Tuple> *re;
   re = searchReadSet(key);
@@ -206,6 +206,34 @@ void TXNExecutor::write(uint64_t key) {
   writeSet.emplace_back(key, tuple);
 }
 
+/**
+ * cf. P5 left middle
+ */
 void TXNExecutor::writePhase() {
-  // TODO
+  TidWord tidA, tidB, tidC;
+
+  // (a) larger than the TID of any record read
+  // or written by the transaction.
+  tidA = std::max(maxWriteTid, maxReadTid);
+  tidA.tid++;
+
+  // (b) larger than the worker's most recently chosen TID
+  tidB = mostRecentlyChosenTid;
+  tidB.tid++;
+
+  // (c) current global epoch
+  tidC.epoch = ThreadLocalEpochs[threadId].body;
+
+  TidWord maxTid = std::max({tidA, tidB, tidC});
+  maxTid.lock = false;
+  maxTid.latest = true;
+  mostRecentlyChosenTid = maxTid;
+
+  for(auto &op: writeSet){
+    memcpy(op.recordPtr->value, writeValue, VALUE_SIZE);
+    storeRelease(op.recordPtr->tidWord.body, maxTid.body);
+  }
+
+  readSet.clear();
+  writeSet.clear();
 }

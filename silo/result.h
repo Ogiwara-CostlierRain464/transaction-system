@@ -2,6 +2,7 @@
 #define TRANSACTIONSYSTEM_RESULT_H
 
 #include <cstdint>
+#include <iostream>
 #include "common.h"
 
 struct Result{
@@ -10,6 +11,17 @@ struct Result{
   uint64_t totalAboutCounts = 0;
   uint64_t totalCommitCounts = 0;
 
+  void addLocalAllResult(const Result &other){
+    totalAboutCounts += other.localAbortCounts;
+    totalCommitCounts += other.localCommitCounts;
+  }
+
+  void displayAllResult(){
+    std::cout <<
+    //" Local commits " << localCommitCounts <<
+    " Total aborts " << totalAboutCounts <<
+    " Total commits " << totalCommitCounts << std::endl;
+  }
 
 };
 

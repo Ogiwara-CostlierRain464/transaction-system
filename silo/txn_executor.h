@@ -49,6 +49,7 @@ private:
   std::vector<WriteElement<Tuple>> writeSet;
   TXNStatus status;
 
+  TidWord mostRecentlyChosenTid;
   TidWord maxReadTid, maxWriteTid;
 
   char writeValue[VALUE_SIZE];

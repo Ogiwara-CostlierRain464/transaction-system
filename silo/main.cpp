@@ -10,6 +10,7 @@
 #include "random.h"
 #include "txn_executor.h"
 #include "zipf.h"
+#include "result.h"
 
 using std::cout;
 using std::endl;
@@ -89,7 +90,7 @@ RETRY:
 
     if(threadID == 0){
       // step epoch time
-
+      stepEpochTime(epochTimerStart, epochTimerStop);
     }
 
     if(loadAcquire(quit)) break;
@@ -109,19 +110,26 @@ RETRY:
     }
 
     if(txnExecutor.validationPhase()){
-      //
+      txnExecutor.writePhase();
+
+      storeRelease(
+        result.localCommitCounts,
+        loadAcquire(result.localCommitCounts) + 1);
     }else{
       txnExecutor.abort();
+      result.localAbortCounts++;
       goto RETRY;
     }
   }
 }
 
-int main(){
+int main() try {
   init();
 
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
+
+  SiloResult.resize(THREAD_NUM);
 
   std::vector<char> readFlags(THREAD_NUM);
   std::vector<std::thread> threads;
@@ -135,7 +143,8 @@ int main(){
   waitForReady(readFlags);
   storeRelease(start, true);
 
-  sleepMs(1000);
+
+  sleepMs(1000 * 3);
 
 
   storeRelease(quit, true);
@@ -144,5 +153,12 @@ int main(){
     thread.join();
   }
 
+  for(size_t i = 0; i < THREAD_NUM; i++){
+    SiloResult[0].addLocalAllResult(SiloResult[i]);
+  }
+
+  SiloResult[0].displayAllResult();
   return 0;
+} catch (std::bad_alloc &err){
+  ERR;
 }
