@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <cmath>
 #include "common.h"
 
 struct Result{
@@ -16,11 +17,17 @@ struct Result{
     totalCommitCounts += other.localCommitCounts;
   }
 
-  void displayAllResult(){
+  void displayAllResult(size_t waitSeconds){
     std::cout <<
     //" Local commits " << localCommitCounts <<
     " Total aborts " << totalAboutCounts <<
     " Total commits " << totalCommitCounts << std::endl;
+
+    uint64_t result = totalCommitCounts / waitSeconds;
+    std::cout <<
+    "Latency[ns]:\t" << std::powl(10.0, 9.0) / result << std::endl;
+    std::cout <<
+    "Throughput[tps]:\t" << result << std::endl;
   }
 
 };

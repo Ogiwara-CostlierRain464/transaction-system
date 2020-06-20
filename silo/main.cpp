@@ -142,7 +142,7 @@ int main() {
   storeRelease(start, true);
 
 
-  sleepMs(1000 * 3);
+  sleepMs(1000 * WAIT_SECONDS);
 
 
   storeRelease(quit, true);
@@ -155,6 +155,6 @@ int main() {
     SiloResult[0].addLocalAllResult(SiloResult[i]);
   }
 
-  SiloResult[0].displayAllResult();
+  SiloResult[0].displayAllResult(WAIT_SECONDS);
   return 0;
 }

@@ -8,7 +8,7 @@
  */
 constexpr size_t CACHE_LINE_SIZE = 64;
 constexpr size_t VALUE_SIZE = 4;
-constexpr size_t THREAD_NUM = 224;
+constexpr size_t THREAD_NUM = 10;
 constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t PAGE_SIZE = 4096;
 constexpr size_t TUPLE_NUM = 1000000;
@@ -16,7 +16,7 @@ constexpr size_t ZIPF_SKEW = 0;
 constexpr size_t RATIO = 50;
 constexpr size_t EPOCH_TIME = 40;
 constexpr size_t CLOCKS_PER_US = 2100;
-
+constexpr size_t WAIT_SECONDS = 3;
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
