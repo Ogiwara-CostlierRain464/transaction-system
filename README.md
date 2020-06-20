@@ -1,6 +1,6 @@
 # Transaction System
 # About
-SiloとかSS2PLとかのトランザクションシステムのプロトタイプ実装を見様見真似で書いていきます
+SiloとかSS2PLとかのトランザクションシステムのプロトタイプ実装を写経させていただきます
 
 # Getting Start
 - CMakeを入れる
