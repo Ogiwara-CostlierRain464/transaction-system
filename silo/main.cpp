@@ -129,6 +129,7 @@ int main(){
 
   sleepMs(1000);
 
+
   storeRelease(quit, true);
 
   for(auto &thread: threads){

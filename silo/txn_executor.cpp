@@ -119,6 +119,7 @@ void TXNExecutor::read(uint64_t key) {
     if (expected == check){
       break; // TID didn't change
     }else{
+      expected = check;
       continue; // TID changes, so retry.
     }
   }
