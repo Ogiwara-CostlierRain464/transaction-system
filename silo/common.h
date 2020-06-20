@@ -1,7 +1,6 @@
 #ifndef TRANSACTIONSYSTEM_COMMON_H
 #define TRANSACTIONSYSTEM_COMMON_H
 
-#include "result.h"
 
 /**
  * 各種定数、共有変数をここにまとめる
@@ -12,6 +11,8 @@ constexpr size_t THREAD_NUM = 4;
 constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t PAGE_SIZE = 4096;
 constexpr size_t TUPLE_NUM = 1000000;
+constexpr size_t ZIPF_SKEW = 0;
+
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
@@ -26,6 +27,7 @@ alignas(CACHE_LINE_SIZE) uint64_t_64byte *CTIDW;
 struct Tuple;
 alignas(CACHE_LINE_SIZE) Tuple *Table;
 
+struct Result;
 std::vector<Result> SiloResult;
 
 

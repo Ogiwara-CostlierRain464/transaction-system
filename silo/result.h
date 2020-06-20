@@ -9,6 +9,8 @@ struct Result{
   uint64_t localCommitCounts = 0;
   uint64_t totalAboutCounts = 0;
   uint64_t totalCommitCounts = 0;
+
+
 };
 
 #endif //TRANSACTIONSYSTEM_RESULT_H

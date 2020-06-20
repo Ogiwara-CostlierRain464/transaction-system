@@ -68,7 +68,7 @@ void worker(
   char &ready,
   const bool &start,
   const bool &quit){
-  // result
+  Result &result = SiloResult[threadID];
   Xoroshiro128Plus random{};
   random.init();
   TXNExecutor txnExecutor(threadID);
