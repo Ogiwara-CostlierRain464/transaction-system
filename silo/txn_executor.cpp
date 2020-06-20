@@ -22,8 +22,9 @@ static void genStringRepeatedNumber(
   }
 }
 
-TXNExecutor::TXNExecutor(size_t threadId)
+TXNExecutor::TXNExecutor(size_t threadId, Result *result)
 : threadId(threadId)
+, result(result)
 {
   readSet.reserve(MAX_OPERATIONS);
   writeSet.reserve(MAX_OPERATIONS);

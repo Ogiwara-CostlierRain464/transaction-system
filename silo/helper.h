@@ -5,6 +5,10 @@
 #include <thread>
 #include <xmmintrin.h>
 #include "atomic_wrapper.h"
+#include "step.h"
+#include "random.h"
+#include "zipf.h"
+#include "tsc.h"
 
 /**
  * Utility functionをまとめる
@@ -47,6 +51,72 @@ size_t decideParallelTableBuildNumber(size_t tupleNum){
   }
 
   return 0;
+}
+
+// assumption: ycsb=true, rmw=false, partition=false
+inline static void makeSteps(
+  std::vector<Step> &steps,
+  Xoroshiro128Plus &rand,
+  FastZipf &zipf,
+  size_t tupleNum,
+  size_t maxOp,
+  size_t ratio,
+  Result &res
+  ){
+  steps.clear();
+  bool readOnlyFlag{true}, writeOnlyFlag{true};
+  for(size_t i = 0; i < maxOp; i++){
+    uint64_t tmpKey;
+
+    // アクセスするキーをランダムに決める
+    tmpKey = zipf() % tupleNum;
+    // R/wをランダムに決定
+    if((rand.next() % 100) < ratio){
+      writeOnlyFlag = false;
+      steps.emplace_back(Operation::Read, tmpKey);
+    }else{
+      readOnlyFlag = false;
+      steps.emplace_back(Operation::Write, tmpKey);
+    }
+  }
+
+  steps.begin()->readOnly = readOnlyFlag;
+  steps.begin()->writeOnly = writeOnlyFlag;
+}
+
+// Clockのspanが閾値を超えたか
+inline bool checkClockSpan(
+  const uint64_t start,
+  const uint64_t stop,
+  const uint64_t threshold
+  ){
+  uint64_t diff = stop - start;
+  return diff > threshold;
+}
+
+// 是諾手のWorkerスレッドが最新のEpochを読み込んだか確認する
+bool checkEpochLoaded(){
+  uint64_t nowEpoch = atomicLoadGlobalEpoch();
+  for(size_t i = 1; i < THREAD_NUM; i++){
+    if(__atomic_load_n(&(ThreadLocalEpochs[i].body), __ATOMIC_ACQUIRE) != nowEpoch){
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void stepEpochTime(uint64_t &epochTimerStart, uint64_t &epochTimerStop){
+  epochTimerStop = rdtscp();
+
+  if(checkClockSpan(
+    epochTimerStart,
+    epochTimerStop,
+    EPOCH_TIME * CLOCKS_PER_US * 1000)
+    && checkEpochLoaded()){
+    atomicAddGlobalEpoch();
+    epochTimerStart = epochTimerStop;
+  }
 }
 
 #endif //TRANSACTIONSYSTEM_HELPER_H

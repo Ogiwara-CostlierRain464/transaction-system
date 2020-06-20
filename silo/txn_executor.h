@@ -21,7 +21,7 @@ enum TXNStatus{
  */
 class TXNExecutor {
 public:
-  explicit TXNExecutor(size_t threadId);
+  explicit TXNExecutor(size_t threadId, Result *result);
 
   void abort();
   void begin();
@@ -53,6 +53,8 @@ private:
 
   char writeValue[VALUE_SIZE];
   char returnValue[VALUE_SIZE];
+
+  Result *result;
 };
 
 

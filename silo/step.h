@@ -15,6 +15,9 @@ struct Step{
   Operation operation;
   uint64_t key;
 
+  bool readOnly = false;
+  bool writeOnly = false;
+
   Step(): operation(Operation::Read), key(0){}
   Step(Operation operation_, uint64_t key_)
   : operation(operation_), key(key_){}

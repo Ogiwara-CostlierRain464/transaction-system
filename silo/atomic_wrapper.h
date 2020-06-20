@@ -49,5 +49,18 @@ inline void atomicStoreThreadLocalEpoch(
     __ATOMIC_RELEASE);
 }
 
+inline void atomicAddGlobalEpoch(){
+  uint64_t expected, desired;
+  expected = atomicLoadGlobalEpoch();
+  for(;;){
+    desired = expected + 1;
+    if(__atomic_compare_exchange_n(
+      &GlobalEpoch.body, &expected, desired,
+      false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)){
+      break;
+    }
+  }
+}
+
 
 #endif //TRANSACTIONSYSTEM_ATOMIC_WRAPPER_H

@@ -12,6 +12,9 @@ constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t PAGE_SIZE = 4096;
 constexpr size_t TUPLE_NUM = 1000000;
 constexpr size_t ZIPF_SKEW = 0;
+constexpr size_t RATIO = 50;
+constexpr size_t EPOCH_TIME = 40;
+constexpr size_t CLOCKS_PER_US = 2100;
 
 
 struct uint64_t_64byte{

@@ -9,6 +9,7 @@
 #include "helper.h"
 #include "random.h"
 #include "txn_executor.h"
+#include "zipf.h"
 
 using std::cout;
 using std::endl;
@@ -71,18 +72,25 @@ void worker(
   Result &result = SiloResult[threadID];
   Xoroshiro128Plus random{};
   random.init();
-  TXNExecutor txnExecutor(threadID);
+  TXNExecutor txnExecutor(threadID, &result);
+  FastZipf zipf(&random, ZIPF_SKEW, TUPLE_NUM);
+  uint64_t epochTimerStart, epochTimerStop;
 
   // Workerの準備が完了したことを伝える
   storeRelease(ready, 1);
   // startになるまでspin lock
   while(!loadAcquire(start)) _mm_pause();
-
   // quitになるまでWorkerを実行
   while(!loadAcquire(quit)){
-    // do some staff...
 
+  makeSteps(txnExecutor.steps, random, zipf, TUPLE_NUM, MAX_OPERATIONS, RATIO, result);
 RETRY:
+
+
+    if(threadID == 0){
+      // step epoch time
+
+    }
 
     if(loadAcquire(quit)) break;
 
