@@ -11,7 +11,7 @@ struct OpElement{
   T *recordPtr;
 
   OpElement(): key(0), recordPtr(nullptr){}
-  explicit OpElement(uint64_t key): key(key){}
+  OpElement(uint64_t key): key(key){}
   OpElement(uint64_t key, T* recordPtr)
   : key(key), recordPtr(recordPtr){}
 };

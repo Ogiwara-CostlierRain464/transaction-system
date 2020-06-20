@@ -33,7 +33,7 @@ void init(){
   }
   if(posix_memalign((void**) &Table,
     PAGE_SIZE,
-    THREAD_NUM * sizeof(Tuple)) != 0){
+    TUPLE_NUM * sizeof(Tuple)) != 0){
     ERR;
   }
   for(size_t i = 0; i < THREAD_NUM; i++){
@@ -97,6 +97,7 @@ RETRY:
 
     txnExecutor.begin();
     for(auto &op: txnExecutor.steps){
+
       switch(op.operation){
         case Operation::Read:
           txnExecutor.read(op.key);
@@ -123,7 +124,7 @@ RETRY:
   }
 }
 
-int main() try {
+int main() {
   init();
 
   alignas(CACHE_LINE_SIZE) bool start = false;
@@ -159,6 +160,4 @@ int main() try {
 
   SiloResult[0].displayAllResult();
   return 0;
-} catch (std::bad_alloc &err){
-  ERR;
 }

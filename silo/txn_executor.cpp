@@ -1,6 +1,7 @@
 #include "txn_executor.h"
 #include "atomic_wrapper.h"
 
+
 /**
  * Generate write value for this thread.
  */
