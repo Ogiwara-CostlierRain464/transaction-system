@@ -7,7 +7,7 @@
 /**
  * This algorithm is originally developed
  * by David Blackman and Sebastiano Vigna (vigna@acm.org)
- * http://xoroshiro.di.unimi.it/xoroshiro128plus.c
+ * @see http://xoroshiro.di.unimi.it/xoroshiro128plus.c
  *
  * 0.72ns で一つの乱数が生成できる
  */
