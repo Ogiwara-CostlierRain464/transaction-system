@@ -1,3 +1,4 @@
+#include <mutex>
 #include "txn_executor.h"
 #include "atomic_wrapper.h"
 
@@ -48,9 +49,20 @@ void TXNExecutor::begin() {
   maxWriteTid.body = 0;
 }
 
+void TXNExecutor::displaySteps() {
+
+  std::string tmp;
+  for(auto &step: steps){
+    auto op = step.operation == Operation::Read
+      ? std::string("r") : std::string("w");
+    tmp += op + "(" + std::to_string(step.key) + ")";
+  }
+  printf("%s\n", tmp.c_str());
+}
+
 void TXNExecutor::displayWriteSet() {
-  printf("display_write_set()\n");
-  printf("-------------------\n");
+  //printf("display_write_set()\n");
+  //printf("-------------------\n");
   for(auto &writeOp: writeSet){
     printf("key\t:\t%llu\n", writeOp.key);
   }

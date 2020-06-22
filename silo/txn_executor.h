@@ -25,6 +25,7 @@ public:
 
   void abort();
   void begin();
+  void displaySteps();
   void displayWriteSet();
   void lockWriteSet();
   void read(uint64_t key);

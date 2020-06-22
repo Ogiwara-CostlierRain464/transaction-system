@@ -8,7 +8,7 @@
  */
 constexpr size_t CACHE_LINE_SIZE = 64;
 constexpr size_t VALUE_SIZE = 4;
-constexpr size_t THREAD_NUM = 10;
+constexpr size_t THREAD_NUM = 1;
 constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t PAGE_SIZE = 4096;
 constexpr size_t TUPLE_NUM = 1000000;

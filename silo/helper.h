@@ -69,7 +69,8 @@ inline static void makeSteps(
     uint64_t tmpKey;
 
     // アクセスするキーをランダムに決める
-    tmpKey = zipf() % tupleNum;
+    //tmpKey = zipf() % tupleNum;
+    tmpKey = zipf() & (tupleNum - 1); // x % 2 == x & 1, and & is much faster than %.
     // R/wをランダムに決定
     if((rand.next() % 100) < ratio){
       writeOnlyFlag = false;

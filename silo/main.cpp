@@ -84,7 +84,8 @@ void worker(
   while(!loadAcquire(quit)){
 
   makeSteps(txnExecutor.steps, random, zipf, TUPLE_NUM, MAX_OPERATIONS, RATIO, result);
-RETRY:
+
+  RETRY:
     if(threadID == 0){
       // step epoch time
       stepEpochTime(epochTimerStart, epochTimerStop);
