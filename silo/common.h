@@ -21,8 +21,8 @@ constexpr size_t WAIT_SECONDS = 3;
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
 
-  uint64_t_64byte(): body(0){}
-  uint64_t_64byte(uint64_t init): body(init){}
+  uint64_t_64byte() noexcept : body(0){}
+  explicit uint64_t_64byte(uint64_t init) noexcept : body(init){}
 };
 
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte GlobalEpoch;
