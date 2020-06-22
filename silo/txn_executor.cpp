@@ -195,7 +195,7 @@ bool TXNExecutor::validationPhase() {
   }
 
   // Phase 3
-  // NOTE: code is omitted in original?
+  // after TXNExecutor::validationPhase, TXNExecutor::writePhase will executed.
   status = Committed;
   return true;
 }

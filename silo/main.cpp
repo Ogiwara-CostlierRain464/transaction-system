@@ -26,19 +26,10 @@ void init(){
     THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
     ERR;
   }
-  if(posix_memalign((void**) &CTIDW,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
   if(posix_memalign((void**) &Table,
     PAGE_SIZE,
     TUPLE_NUM * sizeof(Tuple)) != 0){
     ERR;
-  }
-  for(size_t i = 0; i < THREAD_NUM; i++){
-    ThreadLocalEpochs[i].body = 0;
-    CTIDW[i].body = 0;
   }
 
   size_t maxThread = decideParallelTableBuildNumber(TUPLE_NUM);
