@@ -78,6 +78,7 @@ void worker(
 
   RETRY:
     if(threadID == 0){
+      // Silo requires that E and e_w never diverge too far: ∀w. E - e_w ≤ 1.
       // step epoch time
       stepEpochTime(epochTimerStart, epochTimerStop);
     }

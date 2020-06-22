@@ -12,6 +12,7 @@ struct TidWord{
   union {
     uint64_t body;
     struct {
+      // NOTE: is ordering correct?
       bool lock: 1{};
       bool latest: 1{};
       bool absent: 1{};

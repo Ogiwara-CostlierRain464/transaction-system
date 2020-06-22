@@ -22,12 +22,15 @@ struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
 
   uint64_t_64byte() noexcept : body(0){}
-  explicit uint64_t_64byte(uint64_t init) noexcept : body(init){}
+  uint64_t_64byte(uint64_t init) noexcept : body(init){}
 };
 
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte GlobalEpoch;
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *ThreadLocalEpochs;
 struct Tuple;
+// The actual record data is stored in the same cache line
+// as the record header, avoiding an additional memory fetch to
+// access field values. (cf. P5 4.3)
 alignas(CACHE_LINE_SIZE) extern Tuple *Table;
 
 struct Result;
