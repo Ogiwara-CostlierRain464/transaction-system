@@ -9,21 +9,17 @@
  * by David Blackman and Sebastiano Vigna (vigna@acm.org)
  * http://xoroshiro.di.unimi.it/xoroshiro128plus.c
  *
- * And Tanabe Takayuki custmized.
- *
  * 0.72ns で一つの乱数が生成できる
  */
-class Xoroshiro128Plus {
-public:
+struct Xoroshiro128Plus {
   uint64_t s[2];
 
-  inline void init() {
-    std::random_device rnd;
-    s[0] = rnd();
+  Xoroshiro128Plus(size_t seed){
+    s[0] = seed;
     s[1] = splitMix64(s[0]);
   }
 
-  uint64_t splitMix64(uint64_t seed) {
+  static uint64_t splitMix64(uint64_t seed) {
     uint64_t z = (seed += 0x9e3779b97f4a7c15);
     z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
     z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
@@ -34,7 +30,7 @@ public:
     return (x << k) | (x >> (64 - k));
   }
 
-  uint64_t next(void) {
+  uint64_t next() {
     const uint64_t s0 = s[0];
     uint64_t s1 = s[1];
     const uint64_t result = s0 + s1;
@@ -52,7 +48,7 @@ public:
      to 2^64 calls to next(); it can be used to generate 2^64
      non-overlapping subsequences for parallel computations. */
 
-  void jump(void) {
+  void jump() {
     static const uint64_t JUMP[] = {0xdf900294d8f554a5, 0x170865df4b3201fc};
 
     uint64_t s0 = 0;
@@ -75,7 +71,7 @@ public:
      from each of which jump() will generate 2^32 non-overlapping
      subsequences for parallel distributed computations. */
 
-  void long_jump(void) {
+  void long_jump() {
     static const uint64_t LONG_JUMP[] = {0xd2a98b26625eee7b,
                                          0xdddf9b1090aa7ac1};
 

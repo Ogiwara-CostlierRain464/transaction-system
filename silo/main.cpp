@@ -71,8 +71,7 @@ void worker(
   const bool &start,
   const bool &quit){
   Result &result = SiloResult[threadID];
-  Xoroshiro128Plus random{};
-  random.init();
+  Xoroshiro128Plus random(32);
   TXNExecutor txnExecutor(threadID, &result);
   FastZipf zipf(&random, ZIPF_SKEW, TUPLE_NUM);
   uint64_t epochTimerStart, epochTimerStop;
