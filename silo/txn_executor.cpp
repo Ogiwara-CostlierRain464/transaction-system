@@ -204,7 +204,6 @@ void TXNExecutor::write(uint64_t key) {
   // re-writeを防ぐ
   if(searchWriteSet(key)) return;
 
-  // NOTE: later, implement each step (a)~(c).
   Tuple *tuple;
   ReadElement<Tuple> *re;
   re = searchReadSet(key);
@@ -241,7 +240,10 @@ void TXNExecutor::writePhase() {
   mostRecentlyChosenTid = maxTid;
 
   for(auto &op: writeSet){
+    // (a) updates the record
     memcpy(op.recordPtr->value, writeValue, VALUE_SIZE);
+    // (b) performs a memory fence
+    // (c) stores the TID and releases the lock.
     storeRelease(op.recordPtr->tidWord.body, maxTid.body);
   }
 

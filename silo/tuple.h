@@ -35,6 +35,10 @@ struct TidWord{
   }
 };
 
+/**
+ * Tuple represents just one record.
+ * Use key to access record via Table.
+ */
 struct Tuple{
   alignas(CACHE_LINE_SIZE) TidWord tidWord;
   char value[VALUE_SIZE]{};
