@@ -9,6 +9,18 @@
  * @see https://en.cppreference.com/w/cpp/language/bit_field
  */
 struct TidWord{
+  /**
+   * 議論: 型のパンニングによる未定義動作を踏んでいないか？
+   *
+   * localでは常にstructがActive memberになるように
+   * globalでstoreするときにはuint64_tからの引き出し
+   *
+   * globalから読み込むときにuint64_tがActiveになって、そこから
+   * structが非active memberからの読み込み経由でActiveになって、
+   * 手元で整形するときにはstructがActiveになって問題なし？
+   *
+   *
+   */
   union {
     uint64_t body;
     struct {
