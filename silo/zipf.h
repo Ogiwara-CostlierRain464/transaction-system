@@ -2,6 +2,7 @@
 #define TRANSACTIONSYSTEM_ZIPF_H
 
 #include "random.h"
+#include <cassert>
 
 static double zeta_(size_t nr, double theta){
   double ans = 0.0;

@@ -3,6 +3,8 @@ project(TransactionSystem)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_compile_options(-lpthread)
+
 add_subdirectory(silo)
 add_subdirectory(ss2pl)
 
