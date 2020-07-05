@@ -8,7 +8,7 @@
 #include "step.h"
 #include "random.h"
 #include "zipf.h"
-#include "tsc.h"
+#include "../common/tsc.h"
 
 /**
  * Utility functionをまとめる
