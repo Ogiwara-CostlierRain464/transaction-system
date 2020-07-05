@@ -7,6 +7,7 @@
 #include "../common/xoroshiro128_plus.h"
 #include "tx_executor.h"
 #include "../common/zip_fian.h"
+#include "../common/backoff.h"
 
 void init(uint64_t *initialWts){
   if(posix_memalign((void**)&ThreadRtsArrayForGroup,
@@ -112,6 +113,17 @@ void worker(
   TXExecutor txExecutor(threadId, &CicadaResult[threadId]);
   Result &result = CicadaResult[threadId];
   FastZipf zipf(&random, ZIPF_SKEW, TUPLE_NUM);
+  Backoff backoff(CLOCKS_PER_US);
+
+  storeRelease(ready, 1);
+  while(!loadAcquire(start)){
+    _mm_pause();
+  }
+
+  while(!loadAcquire(quit)){
+
+  }
+
 }
 
 int main(){

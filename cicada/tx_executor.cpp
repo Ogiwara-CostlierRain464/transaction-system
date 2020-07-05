@@ -1,6 +1,6 @@
 #include "tx_executor.h"
 #include "../common/atomic_wrapper.h"
-#include "../common/gen_string.h"
+#include "../common/step.h"
 
 using std::memory_order_acquire;
 using std::memory_order_acq_rel;

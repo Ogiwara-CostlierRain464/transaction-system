@@ -5,9 +5,9 @@
 #include <thread>
 #include <xmmintrin.h>
 #include "../common/atomic_wrapper.h"
-#include "step.h"
 #include "../common/zip_fian.h"
 #include "../common/tsc.h"
+#include "epoch.h"
 
 /**
  * Utility functionをまとめる
@@ -50,38 +50,6 @@ size_t decideParallelTableBuildNumber(size_t tupleNum){
   }
 
   return 0;
-}
-
-// assumption: ycsb=true, rmw=false, partition=false
-inline static void makeSteps(
-  std::vector<Step> &steps,
-  Xoroshiro128Plus &rand,
-  FastZipf &zipf,
-  size_t tupleNum,
-  size_t maxOp,
-  size_t ratio,
-  Result &res
-  ){
-  steps.clear();
-  bool readOnlyFlag{true}, writeOnlyFlag{true};
-  for(size_t i = 0; i < maxOp; i++){
-    uint64_t tmpKey;
-
-    // アクセスするキーをランダムに決める
-    //tmpKey = zipf() % tupleNum;
-    tmpKey = zipf() & (tupleNum - 1); // x % 2 == x & 1, and & is much faster than %.
-    // R/wをランダムに決定
-    if((rand.next() % 100) < ratio){
-      writeOnlyFlag = false;
-      steps.emplace_back(Operation::Read, tmpKey);
-    }else{
-      readOnlyFlag = false;
-      steps.emplace_back(Operation::Write, tmpKey);
-    }
-  }
-
-  steps.begin()->readOnly = readOnlyFlag;
-  steps.begin()->writeOnly = writeOnlyFlag;
 }
 
 // Clockのspanが閾値を超えたか
