@@ -4,6 +4,7 @@
 #include "version.h"
 #include "tuple.h"
 #include "time_stamp.h"
+#include "../common/xoroshiro128_plus.h"
 
 void init(uint64_t *initialWts){
   if(posix_memalign((void**)&ThreadRtsArrayForGroup,
@@ -100,7 +101,12 @@ void init(uint64_t *initialWts){
   }
 }
 
-void worker(size_t threadId, char &ready, bool &start, bool &quit){
+void worker(
+  size_t threadId,
+  char &ready,
+  bool &start,
+  bool &quit){
+  Xoroshiro128Plus random(32);
 
 }
 
