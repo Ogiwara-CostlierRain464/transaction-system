@@ -7,7 +7,7 @@
 struct Tuple{
   std::atomic<Version *> latest;
   std::atomic<uint64_t> minWts;
-  std::atomic<uint64_t> countingCommit;
+  std::atomic<uint64_t> continuingCommit;
   std::atomic<uint8_t> gcLock;
 
   Tuple()

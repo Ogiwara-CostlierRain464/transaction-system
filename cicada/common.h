@@ -2,6 +2,7 @@
 #define TRANSACTIONSYSTEM_COMMON_H
 
 #include <vector>
+#include <atomic>
 
 constexpr size_t CACHE_LINE_SIZE = 64;
 constexpr size_t VALUE_SIZE = 4;
@@ -19,6 +20,10 @@ struct uint64_t_64byte{
   uint64_t_64byte() noexcept : body(0){}
   uint64_t_64byte(uint64_t init) noexcept : body(init){}
 };
+
+alignas(CACHE_LINE_SIZE) extern std::atomic<uint64_t> MinRts;
+alignas(CACHE_LINE_SIZE) extern std::atomic<uint64_t> MinWts;
+alignas(CACHE_LINE_SIZE) extern std::atomic<unsigned int> FirstAllocateTimestamp;
 
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *ThreadWtsArray;
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *ThreadRtsArray;
