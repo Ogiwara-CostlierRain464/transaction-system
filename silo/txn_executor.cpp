@@ -1,6 +1,6 @@
 #include <mutex>
 #include "txn_executor.h"
-#include "atomic_wrapper.h"
+#include "../common/atomic_wrapper.h"
 
 
 /**

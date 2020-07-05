@@ -4,7 +4,7 @@
 #include <vector>
 #include <thread>
 #include <xmmintrin.h>
-#include "atomic_wrapper.h"
+#include "../common/atomic_wrapper.h"
 #include "step.h"
 #include "random.h"
 #include "zipf.h"

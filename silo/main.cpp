@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sys/syscall.h>
 #include "common.h"
-#include "atomic_wrapper.h"
+#include "../common/atomic_wrapper.h"
 #include "helper.h"
 #include "random.h"
 #include "txn_executor.h"

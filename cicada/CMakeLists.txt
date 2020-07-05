@@ -5,7 +5,12 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB_RECURSE PROJECT_SOURCES *.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS *.h)
 
+file(GLOB_RECURSE COMMON_SOURCES ../common/*.cpp)
+file(GLOB_RECURSE COMMON_HEADERS ../common/*.h)
+
 add_executable( ${PROJECT_NAME}
         ${PROJECT_SOURCES}
         ${PROJECT_HEADERS}
+        ${COMMON_SOURCES}
+        ${COMMON_HEADERS}
 )
