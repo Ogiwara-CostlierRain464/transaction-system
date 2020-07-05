@@ -6,8 +6,7 @@
 #include <xmmintrin.h>
 #include "../common/atomic_wrapper.h"
 #include "step.h"
-#include "random.h"
-#include "zipf.h"
+#include "../common/zip_fian.h"
 #include "../common/tsc.h"
 
 /**

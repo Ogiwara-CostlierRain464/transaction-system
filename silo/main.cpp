@@ -7,9 +7,8 @@
 #include "common.h"
 #include "../common/atomic_wrapper.h"
 #include "helper.h"
-#include "random.h"
+#include "../common/zip_fian.h"
 #include "txn_executor.h"
-#include "zipf.h"
 #include "result.h"
 
 using std::cout;

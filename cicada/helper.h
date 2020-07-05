@@ -3,7 +3,7 @@
 
 #include <thread>
 #include <xmmintrin.h>
-#include "atomic_wrapper.h"
+#include "../common/atomic_wrapper.h"
 
 /**
  * Utility functionをまとめる
