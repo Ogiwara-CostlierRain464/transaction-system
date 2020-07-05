@@ -13,6 +13,7 @@ constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t GROUP_COMMIT = 0;
 constexpr size_t TUPLE_NUM = 1000;
 constexpr size_t EX_TIME = 3;
+constexpr size_t PRE_RESERVE_VERSION = 10000;
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
@@ -21,7 +22,23 @@ struct uint64_t_64byte{
   uint64_t_64byte(uint64_t init) noexcept : body(init){}
 };
 
+/**
+ * """
+ * min_rts is also calculated similarly to (thread.rts),
+ * and is used for safe garbage collection.
+ *
+ * cf. §3.1
+ * """
+ */
 alignas(CACHE_LINE_SIZE) extern std::atomic<uint64_t> MinRts;
+/**
+ * """
+ * ...where min_wts is the minimum of (thread.wts) for
+ * all threads, updated by a leader thread periodically (§3.8).
+ *
+ * cf. §3.1
+ * """
+ */
 alignas(CACHE_LINE_SIZE) extern std::atomic<uint64_t> MinWts;
 alignas(CACHE_LINE_SIZE) extern std::atomic<unsigned int> FirstAllocateTimestamp;
 

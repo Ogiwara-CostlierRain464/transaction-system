@@ -1,5 +1,5 @@
 #include "common.h"
-#include "result.h"
+#include "../common/result.h"
 #include "tuple.h"
 
 alignas(CACHE_LINE_SIZE) uint64_t_64byte GlobalEpoch;

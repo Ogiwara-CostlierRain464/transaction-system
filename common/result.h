@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <iostream>
 #include <cmath>
-#include "common.h"
+
+#define CACHE_LINE_SIZE 64
 
 struct Result{
   alignas(CACHE_LINE_SIZE) uint64_t localAbortCounts = 0;

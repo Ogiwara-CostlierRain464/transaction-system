@@ -9,7 +9,7 @@
 #include "helper.h"
 #include "../common/zip_fian.h"
 #include "txn_executor.h"
-#include "result.h"
+#include "../common/result.h"
 
 using std::cout;
 using std::endl;
