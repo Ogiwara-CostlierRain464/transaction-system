@@ -4,11 +4,9 @@
 #include <atomic>
 #include "common.h"
 
-enum VersionStatus{
-  InValid,
+enum VersionStatus : uint8_t {
   Pending,
   Aborted,
-  // PreCommitted, //unused?
   Committed,
   Deleted,
   Unused
@@ -20,7 +18,14 @@ enum VersionStatus{
  * (1) a write timestamp(wts) that is the timestamp
  * of the transaction that has created this version.
  * (2) a read timestamp(rts) that indicates the maximum
- * timestamp of (possibly) x; ,vsmfd;o
+ * timestamp of (possibly) committed transactions
+ * that read this version.
+ * (3) the record data
+ * (4) commit status that indicates the validity of this version
+ * (5) allocation information including the NUMA node ID
+ * for NUMA-aware allocation and the version size.
+ *
+ * All fields (except rts and status) are immutable.
  * """
  *
  * cf. §3.2 Multi-Version Execution.

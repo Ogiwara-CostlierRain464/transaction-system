@@ -2,6 +2,8 @@
 #define TRANSACTIONSYSTEM_HELPER_H
 
 #include <thread>
+#include <xmmintrin.h>
+#include "atomic_wrapper.h"
 
 /**
  * Utility functionをまとめる
@@ -26,6 +28,25 @@ size_t decideParallelTableBuildNumber(size_t tupleNum){
   }
 
   return 0;
+}
+
+void sleepMs(int ms){
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(ms)
+  );
+}
+
+bool isReady(const std::vector<char> &readyFlags){
+  for(auto &flag: readyFlags){
+    if(!loadAcquire(flag)) return false;
+  }
+  return true;
+}
+
+void waitForReady(const std::vector<char> &readyFlags){
+  while(!isReady(readyFlags)){
+    _mm_pause();
+  }
 }
 
 #endif //TRANSACTIONSYSTEM_HELPER_H

@@ -12,7 +12,7 @@ constexpr size_t THREAD_NUM = 2;
 constexpr size_t MAX_OPERATIONS = 10;
 constexpr size_t GROUP_COMMIT = 0;
 constexpr size_t TUPLE_NUM = 1000;
-
+constexpr size_t EX_TIME = 3;
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
@@ -45,6 +45,10 @@ alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *GCExecuteFlag;
 struct Tuple;
 alignas(CACHE_LINE_SIZE) extern Tuple *Table;
 alignas(CACHE_LINE_SIZE) extern uint64_t InitialWts;
+
+struct Result;
+alignas(CACHE_LINE_SIZE) std::vector<Result> CicadaResult;
+
 
 
 #endif //TRANSACTIONSYSTEM_COMMON_H

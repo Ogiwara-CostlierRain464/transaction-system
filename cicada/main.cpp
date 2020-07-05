@@ -100,10 +100,41 @@ void init(uint64_t *initialWts){
   }
 }
 
+void worker(size_t threadId, char &ready, bool &start, bool &quit){
+
+}
+
 int main(){
   uint64_t initialWts;
   init(&initialWts);
-  MinWts.store(initialWts + 2, )
+  // TODO: find why + 2?
+  MinWts.store(initialWts + 2, std::memory_order_release);
+
+  alignas(CACHE_LINE_SIZE) bool start = false;
+  alignas(CACHE_LINE_SIZE) bool quit = false;
+
+  CicadaResult.resize(THREAD_NUM);
+
+  std::vector<char> readyFlags(THREAD_NUM);
+  std::vector<std::thread> threads;
+  threads.reserve(THREAD_NUM);
+
+  for(size_t i = 0; i < THREAD_NUM; ++i){
+    threads.emplace_back(worker,
+      i, std::ref(readyFlags[i]), std::ref(start), std::ref(quit));
+  }
+
+  waitForReady(readyFlags);
+  storeRelease(start, true);
+
+  sleepMs(1000 * EX_TIME);
+
+  storeRelease(quit, true);
+  for(auto &thread: threads){
+    thread.join();
+  }
+
+  // add to result
 
   return 0;
 }
