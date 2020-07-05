@@ -3,11 +3,14 @@ project(TransactionSystem)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# TODO restrict compiler setting
+# use gcc and g++, restrict version.
+
 add_link_options(-lpthread)
 
 add_subdirectory(silo)
 add_subdirectory(ss2pl)
-
+add_subdirectory(cicada)
 
 ## Gtest
 
