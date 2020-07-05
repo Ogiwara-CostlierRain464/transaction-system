@@ -13,7 +13,7 @@ static double zeta_(size_t nr, double theta){
 }
 
 /**
- * Zipf distribution is introduced by
+ * Zipfian distribution is introduced by
  * Jim Gray et al.
  *
  * from Abstract:

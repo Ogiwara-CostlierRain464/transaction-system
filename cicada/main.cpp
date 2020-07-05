@@ -5,6 +5,8 @@
 #include "tuple.h"
 #include "time_stamp.h"
 #include "../common/xoroshiro128_plus.h"
+#include "tx_executor.h"
+#include "../common/zip_fian.h"
 
 void init(uint64_t *initialWts){
   if(posix_memalign((void**)&ThreadRtsArrayForGroup,
@@ -107,7 +109,9 @@ void worker(
   bool &start,
   bool &quit){
   Xoroshiro128Plus random(32);
-
+  TXExecutor txExecutor(threadId, &CicadaResult[threadId]);
+  Result &result = CicadaResult[threadId];
+  FastZipf zipf(&random, ZIPF_SKEW, TUPLE_NUM);
 }
 
 int main(){

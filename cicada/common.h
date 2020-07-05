@@ -14,6 +14,7 @@ constexpr size_t GROUP_COMMIT = 0;
 constexpr size_t TUPLE_NUM = 1000;
 constexpr size_t EX_TIME = 3;
 constexpr size_t PRE_RESERVE_VERSION = 10000;
+constexpr size_t ZIPF_SKEW = 0;
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
