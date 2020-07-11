@@ -9,6 +9,8 @@
 #include "../common/backoff.h"
 #include "../common/debug.h"
 #include "../common/helper.h"
+#include "../common/result.h"
+
 
 void init(uint64_t *initialWts){
   if(posix_memalign((void**)&ThreadRtsArrayForGroup,
@@ -161,7 +163,11 @@ int main(){
     thread.join();
   }
 
-  // add to result
+  for(size_t i = 0; i < THREAD_NUM; ++i){
+    CicadaResult[0].addLocalAllResult(CicadaResult[i]);
+  }
+
+  CicadaResult[0].displayAllResult(EX_TIME);
 
   return 0;
 }
