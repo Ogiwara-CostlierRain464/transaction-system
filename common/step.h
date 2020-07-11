@@ -1,5 +1,5 @@
-#ifndef TRANSACTIONSYSTEM_GEN_STRIN_H
-#define TRANSACTIONSYSTEM_GEN_STRIN_H
+#ifndef TRANSACTIONSYSTEM_STEP_H
+#define TRANSACTIONSYSTEM_STEP_H
 
 #include <cstddef>
 #include <cstdio>
@@ -77,7 +77,16 @@ static void genStringRepeatedNumber(
   }
 }
 
-// assumption: ycsb=true, rmw=false, partition=false
+/**
+ *
+ * @param steps
+ * @param rand
+ * @param zipf
+ * @param tupleNum
+ * @param maxOp
+ * @param ratio R/Wのうち、Readの割合(0~100)
+ * @param res
+ */
 inline static void makeSteps(
   std::vector<Step> &steps,
   Xoroshiro128Plus &rand,
@@ -110,4 +119,4 @@ inline static void makeSteps(
 }
 
 
-#endif //TRANSACTIONSYSTEM_GEN_STRIN_H
+#endif //TRANSACTIONSYSTEM_STEP_H

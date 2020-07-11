@@ -2,7 +2,7 @@
 #define TRANSACTIONSYSTEM_VERSION_H
 
 #include <atomic>
-#include "common.h"
+#include "consts.h"
 
 enum VersionStatus : uint8_t {
   Pending,

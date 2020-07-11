@@ -1,6 +1,5 @@
 #include <iostream>
-#include "common.h"
-#include "helper.h"
+#include "consts.h"
 #include "version.h"
 #include "tuple.h"
 #include "time_stamp.h"
@@ -8,6 +7,8 @@
 #include "tx_executor.h"
 #include "../common/zip_fian.h"
 #include "../common/backoff.h"
+#include "../common/debug.h"
+#include "../common/helper.h"
 
 void init(uint64_t *initialWts){
   if(posix_memalign((void**)&ThreadRtsArrayForGroup,
@@ -121,9 +122,13 @@ void worker(
   }
 
   while(!loadAcquire(quit)){
+    makeSteps(txExecutor.steps, random, zipf, TUPLE_NUM, MAX_OPERATIONS, READ_RATIO, result);
 
+  RETRY:
+    if(threadId == 0){ // leader thread
+
+    }
   }
-
 }
 
 int main(){

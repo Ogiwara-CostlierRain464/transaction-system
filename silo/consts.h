@@ -1,5 +1,5 @@
-#ifndef TRANSACTIONSYSTEM_COMMON_H
-#define TRANSACTIONSYSTEM_COMMON_H
+#ifndef TRANSACTIONSYSTEM_CONSTS_H
+#define TRANSACTIONSYSTEM_CONSTS_H
 
 #include <vector>
 
@@ -40,4 +40,4 @@ extern std::vector<Result> SiloResult;
 
 //alignas(CACHE_LINE_SIZE) extern
 
-#endif //TRANSACTIONSYSTEM_COMMON_H
+#endif //TRANSACTIONSYSTEM_CONSTS_H

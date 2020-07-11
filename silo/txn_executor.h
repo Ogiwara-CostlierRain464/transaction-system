@@ -5,7 +5,7 @@
 #include <vector>
 #include "op_elemet.h"
 #include "tuple.h"
-#include "step.h"
+#include "../common/step.h"
 
 /**
  * TXN Status.

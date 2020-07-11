@@ -2,14 +2,15 @@
 #include <vector>
 #include <thread>
 #include <xmmintrin.h>
-#include <iostream>
-#include <sys/syscall.h>
-#include "common.h"
+#include "consts.h"
 #include "../common/atomic_wrapper.h"
-#include "helper.h"
 #include "../common/zip_fian.h"
 #include "txn_executor.h"
 #include "../common/result.h"
+#include "../common/debug.h"
+#include "../common/helper.h"
+#include "../common/step.h"
+#include "epoch.h"
 
 using std::cout;
 using std::endl;

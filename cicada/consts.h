@@ -1,5 +1,5 @@
-#ifndef TRANSACTIONSYSTEM_COMMON_H
-#define TRANSACTIONSYSTEM_COMMON_H
+#ifndef TRANSACTIONSYSTEM_CONSTS_H
+#define TRANSACTIONSYSTEM_CONSTS_H
 
 #include <vector>
 #include <atomic>
@@ -16,6 +16,7 @@ constexpr size_t EX_TIME = 3;
 constexpr size_t PRE_RESERVE_VERSION = 10000;
 constexpr size_t ZIPF_SKEW = 0;
 constexpr size_t CLOCKS_PER_US = 2100;
+constexpr size_t READ_RATIO = 70;
 
 struct uint64_t_64byte{
   alignas(CACHE_LINE_SIZE) uint64_t body;
@@ -70,4 +71,4 @@ alignas(CACHE_LINE_SIZE) std::vector<Result> CicadaResult;
 
 
 
-#endif //TRANSACTIONSYSTEM_COMMON_H
+#endif //TRANSACTIONSYSTEM_CONSTS_H

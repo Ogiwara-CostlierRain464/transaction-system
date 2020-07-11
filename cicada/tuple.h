@@ -2,7 +2,7 @@
 #define TRANSACTIONSYSTEM_TUPLE_H
 
 #include <atomic>
-#include "common.h"
+#include "consts.h"
 
 struct Tuple{
   std::atomic<Version *> latest;

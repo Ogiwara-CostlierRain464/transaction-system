@@ -1,7 +1,7 @@
 #ifndef TRANSACTIONSYSTEM_TIME_STAMP_H
 #define TRANSACTIONSYSTEM_TIME_STAMP_H
 
-#include "common.h"
+#include "consts.h"
 #include "../common/tsc.h"
 
 /**
