@@ -1,11 +1,11 @@
-# (RFC)(WIP) CPUと、コンパイラと、C++
+# (RFC) CPUと、コンパイラと、C++
 
 # Abstract
 Mutexを用いない、lock-freeな並列処理プログラムを作るときに、Shared memory multiple processorにおける
 Consistency modelを理解する必要が出てきた。CPU, コンパイラ, C++のそれぞれについて調べたが、
 それらを横断して説明しているような資料、また一般的な(分散システムにおける)Consistency modelとの繋がり
 について説明された資料が見当たらなかったため、ここに個人用の**メモ書き**を記しておく。
-また、個人的な解釈についても記述しておく。
+また、個人的な解釈についても記述しておく。なお、参考文献で扱ってない範囲(CPUのソケット数等？)については追記していく。
 
 CPU、コンパイラ、C++の順で説明していく。
 
@@ -385,7 +385,7 @@ void w2(){
 TSOと仮定すると、w1におけるwrite同士、w2におけるread同士のreorderは発生しないので、
 このコードは以下のグラフで表すことができる。
 
-<img src="FENCE.jpeg" width=500>
+<img src="TSO.jpeg" width=500>
 
 rfがあるが、hbがないので、C++ memory modelでは?は2000にも0にもなると言える。
 しかしながら、TSOの制約により、Read Other's Write Earlyは許容されないため、必ず
