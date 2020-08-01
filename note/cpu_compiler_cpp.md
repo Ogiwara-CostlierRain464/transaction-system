@@ -1,4 +1,4 @@
-# (RFC) CPUと、コンパイラと、C++
+# (RFC)(WIP) CPUと、コンパイラと、C++
 
 # Abstract
 Mutexを用いない、lock-freeな並列処理プログラムを作るときに、Shared memory multiple processorにおける
