@@ -145,7 +145,7 @@ C++のmemory modelは各アーキテクチャごとのconsistency modelを隠蔽
 ここでは、[3]に基づいてプログラム中のmemory modelをグラフ化し、
 プログラムを実行したときにどのような挙動が発生するか/発生しないかを示す方法を説明する。
 ただし論文中と同じようにmemory_order_consume, std::atomic_thread_fenceにmemory_order_seq_cstを指定した時の挙動, fence同士のsynchronizeについては考えない。
-また、簡単のためにコンパイラは以下の手順でfenceの書き換えを行うと考えるものとする(これは正しい手法では無いが、簡単のためひとまず受け入れる)
+また、簡単のためにコンパイラは以下の手順でfenceの書き換えを行うと考えるものとする(これは[3]のFigure3と無矛盾ではあるが、正しい手法では無い。が、簡単のためひとまず受け入れる)
 
 1. fence前後のコードについて、それぞれreorderをする(fence前後のコードのreorderは発生しない)
 2. fenceがrelease fenceである場合にはそのfenceより下の操作にrelease semanticsを、
@@ -279,23 +279,87 @@ R(y, F)が成り立つのは R(y, F) < W(y, T) の場合である。
 
 (ここら辺ついては[3]でも記述されておらず、また整備されていないので要検討)
 
+### relaxed
+
+```c++
+std::atomic_bool x = false, y = false;
+std::atomic_int z = 0;
+
+void w1(){
+  x.store(true, std::memory_order_relaxed);
+  y.store(true, std::memory_order_relaxed);
+}
+
+void w2(){
+  while(!y.load(std::memory_order_relaxed));
+  if(x.load(std::memory_order_relaxed))
+    ++z;
+}
+```
+
+w1のx,yの読み込みはどちらが先に行われるかわからない。
+仮にreorderが発生しなかったと仮定し、これをグラフにすると、
+
+<img src="RLX.jpeg" width=500>
+
+となる。reads from(rf)関係があるが、これはhbとはならないため、?の値はTにもFにもなり得る。
+
+### acquire/release
 
 
+```c++
+std::atomic_bool x = false, y = false;
+std::atomic_int z = 0;
 
+void w1(){
+  x.store(true, std::memory_order_relaxed); // A
+  y.store(true, std::memory_order_release); // B
+}
 
+void w2(){
+  while(!y.load(std::memory_order_acquire)); // C
+  if(x.load(std::memory_order_relaxed)) // D
+    ++z;
+}
+```
 
+release semanticsによりAとBのreorderは発生しない。同じく、
+acquire semanticsによりCとDのreorderは発生しない。グラフで表すと
 
+<img src="REL_ACQ.jpeg" width=500>
 
+となる。hbにより、?はTとなることが保証される。
 
+### Fence
 
+```c++
+bool x = false;
+std::atomic_bool y = false;
+std::atomic_int z = 0;
 
-また、各orderとhbとconsistency modelとの関連について
+void w1(){
+  x = true; // A
+  std::atomic_thread_fence(std::memory_order_release); // B
+  y.store(true, std::memory_order_relaxed); // C
+}
 
-sbは実行時に決定する
-swも
+void w2(){
+  while(!y.load(std::memory_order_relaxed)); // D
+  std::atomic_thread_fence(std::memory_order_acqiure); // E
+  if(x) // F
+    ++z;
+}
+```
 
-while loadの例
+まず、BによってAとCのreorderは行われない。次に、Bはrelease fenceなので、その後にあるCにはrelease semanticsが与えられる。
+Bを消し(消したとみなし)、Cはrelease semanticsよりAとreorderは行われない。
+w2のコードについても同様にしてfenceを消し、Dにacquire semanticsを与える。
+結果、以下のようなグラフになる。
 
+<img src="FENCE.jpeg" width=500>
+
+acquire/releaseのときと同じ結果となる。また、hbによって順序が保たれているので、xの読み書きによる
+race conditionは発生しない、ゆえにxはnon atomic
 
 
 
@@ -321,3 +385,4 @@ Twitter経由で非常に参考になる論文・記事を紹介して下さっ�
 5. x86/x64におけるメモリオーダーの話 (https://github.com/herumi/misc/blob/master/cpp/fence.md)
 6. Consistency model(https://en.m.wikipedia.org/wiki/Consistency_model)
 7. Dependence analysis(https://en.m.wikipedia.org/wiki/Dependence_analysis)
+8. Intel® 64 and IA-32 Architectures Software Developer Manuals(https://software.intel.com/content/www/us/en/develop/articles/intel-sdm.html)
