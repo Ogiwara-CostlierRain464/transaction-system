@@ -102,8 +102,6 @@ readをする。故に、「あるProcessorの書き込みの順序は、他のP
 - 時間軸は下方向
 - 一つの行には一つのProcessorからの処理しかかかない(同じデータに対する読み書きは同時には発生しない、また可読性のため)
 
-
-![](table.jpeg)
 <img src="table.jpeg" width=500>
 
 また、TSOがどのようにしてsafety netを提供するかについて説明する。
@@ -216,6 +214,8 @@ AとBはrelax semanticsをもつため、reorderされるかもしれない(あ�
 
 ## 具体例とそのグラフ化
 
+### seq_cst
+
 ```c++
 std::atomic_bool x = false, y = false;
 std::atomic_int z = 0;
@@ -244,10 +244,42 @@ void w4(){
 このプログラムを実行した後、zは2,1のどちらかになり、0には決してならないことを示す。
 このプログラムを[3]と同じようにグラフ化するとこのようになる。
 
-![](SC1.jpeg)
+
+<img src="SC1.jpeg" width=500>
+
+この?の部分の組み合わせ、(T,F),(F,T),(T,T),(F,F)についてそれぞれ発生しうるかをこのグラフから導出する。
+
+<img src="SC2.jpeg" width=500>
+
+まず、(T,F)となる場合はこのようなorderの場合である。total orderとなっているので、このグラフが表すorderは発生しうる。
 
 
-(rfなどによるcyclicは発生してもおかしくない)(ここら辺はまだ整備されていない)
+<img src="SC3.jpeg" width=500>
+
+
+次に、(F,T)となる場合はこのようなorderの場合である。total orderとなっているので、このグラフが表すorderは発生しうる。
+
+<img src="SC4.jpeg" width=500>
+
+次に、(T,T)となる場合はこのようなorderの場合である。先ほどの二つよりも複雑なグラフとなっているが、total orderとなっているので、このグラフが表すorderは発生しうる。
+
+<img src="SC5.jpeg" width=500>
+
+次に、(F,F)となる場合はこのようなorderの場合であるが、これはhbが循環し、total orderではなくなっているため、このような状況は発生しない。
+実際に、(F,F)とならないことを次のようにして証明できる。　
+
+すべての操作はSC semanticsを持つので、total orderが成り立つ。R(x, F) ∧ R(y, F)が成り立つとする。
+R(x, F)が成り立つのは R(x, F) < W(x, T) の場合であり、
+R(y, F)が成り立つのは R(y, F) < W(y, T) の場合である。
+グラフのhb関係より、W(y, T) < R(x, F) < W(x, T) < R(y, F) < W(y, T) となり、cycleが発生する。
+これは、total orderが成り立つという過程と矛盾する。よって、(F,F)は発生しえない。
+
+ここで、hb関係についてはSC semanticsを用いてtotal orderを強制しなくても、巡回することはないことがC++ memory modelでは保証されている。
+しかしながら、reads fromなどのエッジを加えると、巡回グラフとなることがある。
+
+(ここら辺ついては[3]でも記述されておらず、また整備されていないので要検討)
+
+
 
 
 
