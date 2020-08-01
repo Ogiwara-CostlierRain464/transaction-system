@@ -104,6 +104,7 @@ readをする。故に、「あるProcessorの書き込みの順序は、他のP
 
 
 ![](table.jpeg)
+<img src="table.jpeg" width=300>
 
 また、TSOがどのようにしてsafety netを提供するかについて説明する。
 TSOはatomicなRead-Modify-Writeを挿入するだけでreorderを防げる。
@@ -134,6 +135,7 @@ C++のatomic_thread_fenceはその前後のreorderを防ぐ&前後の操作にme
 たとえばGCCなら`asm volatile("" ::: "memory");`、MSVCなら(x86に対しては)`_ReadWriteBarrier();`でfenceを記述する。
 
 # C++
+## memory model
 C++のmemory modelは各アーキテクチャごとのconsistency modelを隠蔽し、より一般的なconsistency modelを与える。　　
 例えば、memory_order_relaxedは、
 
@@ -164,6 +166,97 @@ acquire fenceである場合にはそのfenceより上の操作にacquire semant
 acquire/releaseについては、Release consistencyとかなり似た性質を持つと言える。
 
 
+次に、sequentially-before, synchronize-with, happens-beforeについて簡単な説明をする。
+
+- sequentially-before: ある操作が、別の操作の前におきる関係
+- synchronize-with: ある操作が別のスレッドの操作からreads fromをし、
+かつreadする操作がacquire semantics, writeする操作がrelease semanticsを持っているときに持たれる関係
+- happens-before: sequentially-beforeとsynchronize-withから作られる推移的閉包([3]では`(sb ∪ sw ∪ asw)+` で表現)で、この関係が成り立てば、プログラムはその順で実行されたと見做すことができる。
+
+以下、それぞれsb, sw, hbと表記する。
+これらの関係はコンパイル時に決まるとは限らない。例えば、以下のようなコードを考える。
+(以降、サンプルコード中のw1~w4関数はスレッドを表し、プログラムの実行時にそれらのスレッドが同時に立ち上がるとする。)
+
+```c++
+std::atomic_int x{0};
+
+void w1(){
+  x.store(23, std::memory_order_release); // (1)
+}
+
+void w2(){
+  // x.load(std::memory_order_acquire); (A)
+  // while(x.load(std::memory_order_acquire)); (B)
+}
+```
+
+(A)をコメントアウトした場合、コンパイル時に(A)が(1)とswするかどうかはわからない。
+もしたまたま(A)が23を読み出したら((A) reads from (1)なら)、(1)とsw関係を持つし、
+そうでないなら、sw関係は持たない。
+
+(B)をコメントアウトした場合、(B)は(1)からの書き込みが行われるまで待つ、つまり必ずsw関係をもつため、
+(B)が(1)とsw関係を持つことは、コンパイル時にわかる。
+
+次に、以下のようなコードを考える
+
+```c++
+std::atomic_int x{0};
+std::atomic_int y{0};
+
+
+void w1(){
+  x.load(std::memory_order_relax); // A
+  y.load(std::memory_order_relax); // B
+}
+```
+
+AとBはrelax semanticsをもつため、reorderされるかもしれない(あるいは、されないかもしれない)。
+もしreorderされないならA sb B, されるならB sb Aとなるので、これはコンパイル時には決定できない。
+
+
+## 具体例とそのグラフ化
+
+```c++
+std::atomic_bool x = false, y = false;
+std::atomic_int z = 0;
+
+void w1(){
+  x.store(true, std::memory_order_seq_cst);
+}
+
+void w2(){
+  y.store(true, std::memory_order_seq_cst);
+}
+
+void w3(){
+  while(!x.load(std::memory_order_seq_cst));
+  if(y.load(std::memory_order_seq_cst))
+    ++z;
+}
+
+void w4(){
+ while(!y.load(std::memory_order_seq_cst));
+  if(x.load(std::memory_order_seq_cst))
+    ++z;
+}
+```
+
+このプログラムを実行した後、zは2,1のどちらかになり、0には決してならないことを示す。
+このプログラムを[3]と同じようにグラフ化するとこのようになる。
+
+![](SC1.jpeg)
+
+
+(rfなどによるcyclicは発生してもおかしくない)(ここら辺はまだ整備されていない)
+
+
+
+
+
+
+
+
+
 また、各orderとhbとconsistency modelとの関連について
 
 sbは実行時に決定する
@@ -171,24 +264,6 @@ swも
 
 while loadの例
 
-
-
-
-
-
-コンパイラのreorderについて
-
-同じデータに対して、以下のreorderはできない
-r→w(RAW)
-w→w(WAW)
-w→r(WAR)
-
-Atomicについては
-relax同士はreorder可能
-acquireはその下の操作が上に来る事がない
-release はその逆
-
-これはRelease consistencyとほぼ同様
 
 
 
