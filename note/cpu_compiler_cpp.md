@@ -104,7 +104,7 @@ readをする。故に、「あるProcessorの書き込みの順序は、他のP
 
 
 ![](table.jpeg)
-<img src="table.jpeg" width=300>
+<img src="table.jpeg" width=500>
 
 また、TSOがどのようにしてsafety netを提供するかについて説明する。
 TSOはatomicなRead-Modify-Writeを挿入するだけでreorderを防げる。
