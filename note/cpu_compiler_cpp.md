@@ -359,27 +359,54 @@ w2のコードについても同様にしてfenceを消し、Dにacquire semanti
 <img src="FENCE.jpeg" width=500>
 
 acquire/releaseのときと同じ結果となる。また、hbによって順序が保たれているので、xの読み書きによる
-race conditionは発生しない、ゆえにxはnon atomic
+race conditionは発生しない、ゆえにxはnon atomicでも問題ないことが保証された。
 
+# C++ memory modelとTSO
+最後に、C++ memory modelによる制約とTSOによる制約の違いを比較する。
 
+```c++
+std::atomic_int x = 0;
+std::atomic_bool y = false;
 
+void w1(){
+  x.store(2000, std::memory_order_relaxed);
+  asm volatile("" ::: "memory"); 
+  y.store(true, std::memory_order_relaxed);
+}
 
+void w2(){
+  while(!y.load(std::memory_order_relaxed));
+  asm volatile("" ::: "memory");
+  printf("x: %d", x.load(std::memory_order_relaxed));
+}
+```
 
+途中、コンパイラによるreorderを防ぐため(これだけではCPUによるreorderは防げない)のgccインラインアセンブリ拡張を記述している。
+TSOと仮定すると、w1におけるwrite同士、w2におけるread同士のreorderは発生しないので、
+このコードは以下のグラフで表すことができる。
 
+<img src="FENCE.jpeg" width=500>
 
+rfがあるが、hbがないので、C++ memory modelでは?は2000にも0にもなると言える。
+しかしながら、TSOの制約により、Read Other's Write Earlyは許容されないため、必ず
+?は2000となる。(このことは、rfがswに昇格したと捉えることもできるであろう。)
 
+# 結論
+CPU, コンパイラ, C++のそれぞれのレイヤにおけるConsistency modelについて横断的にのべた。
+CPUレベルではTSOと仮定することによりプログラムの挙動が捉えやすくなり、
+C++レベルではグラフに落とし込むことにより、より一般的なアーキテクチャにおける挙動を把握できた。
+最後に、プログラムを走らせるCPUアーキテクチャを確認することにより、C++ memory modelでは予測できなかった
+挙動をさらに絞り込むことができた。
 
-
-
-次にあの論文と、本から
-
+並列処理プログラムの挙動を説明するときには、最初からTSO上であると仮定するか、あるいはまずはC++ memory modelをもとに
+グラフを構築し、そのグラフにさらにTSOの制約を加える、というような方法が取れるであろう。
 
 いつもお世話になっている研究室の先生・先輩方、
 Twitter経由で非常に参考になる論文・記事を紹介して下さった他大学の先生、ありがとうございます。
 
 # 参考文献
 1. Anthony Williams, "C++ Concurrency in Action", Manning Publications.
-2. Shared Memory Consistency Models: A Tutorial (https://www.hpl.hp.com/techreports/Compaq-DEC/WRL-95-7.pdfhttps://www.hpl.hp.com/techreports/Compaq-DEC/WRL-95-7.pdf)
+2. Shared Memory Consistency Models: A Tutorial (https://www.hpl.hp.com/techreports/Compaq-DEC/WRL-95-7.pdf)
 3. Common Compiler Optimisations are Invalid in the C11 Memory Model and what we can do about it(http://plv.mpi-sws.org/c11comp/popl15.pdf)
 4. std::atomicの挙動がメモリオーダーによってどう異なるか (https://uchan.hateblo.jp/entry/2020/06/14/172543)
 5. x86/x64におけるメモリオーダーの話 (https://github.com/herumi/misc/blob/master/cpp/fence.md)
