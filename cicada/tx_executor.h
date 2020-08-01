@@ -39,6 +39,16 @@ struct TXExecutor {
 
   TXExecutor(uint8_t threadID, Result *result);
   ~TXExecutor();
+
+  void abort();
+  void begin();
+  void read(const uint64_t &key);
+  void write(const uint64_t &key);
+  bool validation();
+  void writePhase();
+
+  ReadElement<Tuple> *searchReadSet(uint64_t key);
+  WriteElement<Tuple> *searchWriteSet(uint64_t key);
 };
 
 

@@ -13,8 +13,9 @@ struct Tuple{
   Tuple()
   : latest(nullptr), gcLock(0){}
 
-
-
+  Version *loadAcquireLatest(){
+    return latest.load(std::memory_order_acquire);
+  }
 
 };
 

@@ -202,6 +202,7 @@ void TXNExecutor::write(uint64_t key) {
 void TXNExecutor::writePhase() {
   TidWord tidA, tidB, tidC;
 
+
   // (a) larger than the TID of any record read
   // or written by the transaction.
   tidA = std::max(maxWriteTid, maxReadTid);
@@ -214,6 +215,7 @@ void TXNExecutor::writePhase() {
   // (c) current global epoch
   tidC.epoch = ThreadLocalEpochs[threadId].body;
 
+  // (a),(b),(c)よりも大きいもので、最小のものを選ぶので、std::maxでよい
   TidWord maxTid = std::max({tidA, tidB, tidC});
   maxTid.lock = false;
   maxTid.latest = true;

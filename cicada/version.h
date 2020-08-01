@@ -55,6 +55,22 @@ struct Version{
     assert(false);
   }
 
+  Version *loadAcquireNext(){
+    return next.load(std::memory_order_acquire);
+  }
+
+  uint64_t loadAcquireRts(){
+    return rts.load(std::memory_order_acquire);
+  }
+
+  VersionStatus loadAcquireStatus(){
+    return status.load(std::memory_order_acquire);
+  }
+
+  uint64_t loadAcquireWts(){
+    return wts.load(std::memory_order_acquire);
+  }
+
   void atomicSet(
     const uint64_t rts_, const uint64_t wts_,
     Version *next_, const VersionStatus status_

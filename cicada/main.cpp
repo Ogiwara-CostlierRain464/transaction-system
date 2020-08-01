@@ -10,6 +10,7 @@
 #include "../common/debug.h"
 #include "../common/helper.h"
 #include "../common/result.h"
+#include "leader_work.h"
 
 
 void init(uint64_t *initialWts){
@@ -128,8 +129,11 @@ void worker(
 
   RETRY:
     if(threadId == 0){ // leader thread
-
+      leaderWork(std::ref(backoff));
     }
+
+    if(loadAcquire(quit)) break;
+
   }
 }
 

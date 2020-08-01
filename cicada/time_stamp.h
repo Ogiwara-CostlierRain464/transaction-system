@@ -18,12 +18,18 @@ struct TimeStamp{
   uint64_t  clockBoost = 0;
   uint8_t  threadId;
 
+  /**
+   * 最初にTimeStampを初期化するときに使う
+   */
   inline void generateTimeStampFirst(uint8_t threadId_){
     localClock = rdtscp();
     body = (localClock << (sizeof(threadId_) * 8)) | threadId_;
     threadId = threadId_;
   }
 
+  /**
+   * 二回目以降、clockBoostなどを元にtsを作るときに使う
+   */
   inline void generateTimeStamp(uint8_t threadId_){
     uint64_t tmp = rdtscp();
     uint64_t elapsedTime = tmp - localClock;

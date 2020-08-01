@@ -1,6 +1,9 @@
 #include "tx_executor.h"
 #include "../common/atomic_wrapper.h"
 #include "../common/step.h"
+#include "../common/debug.h"
+#include "tuple.h"
+
 
 using std::memory_order_acquire;
 using std::memory_order_acq_rel;
@@ -10,7 +13,7 @@ TXExecutor::TXExecutor(
 : result(result_), threadId(threadId_)
 {
   while(MinWts.load(memory_order_acquire) == 0){
-    ; // wait to initialize MinWts
+    ; // wait to initialize MinWts(wait for store at main();)
   }
   /**
    * """
@@ -57,4 +60,109 @@ TXExecutor::~TXExecutor() {
   writeSet.clear();
   GCQueue.clear();
   steps.clear();
+}
+
+void TXExecutor::abort() {
+  ERR;
+}
+
+void TXExecutor::begin() {
+  this->status = InFlight;
+  this->wts.generateTimeStamp(threadId);
+  storeRelease(ThreadWtsArray[threadId].body, this->wts.body);
+  this->rts = MinWts.load(std::memory_order_acquire);
+  storeRelease(ThreadRtsArray[threadId].body, this->rts);
+
+  // TODO: one-sided synchronization
+}
+
+void TXExecutor::read(const uint64_t &key) {
+  /**
+   * avoid re-read
+   */
+  if(searchWriteSet(key) || searchReadSet(key)) return;
+
+  Tuple *tuple = &Table[key];
+  Version *ver, *laterVer;
+  laterVer = nullptr;
+
+  /**
+   * """
+   * A read-write transaction uses (thread.wts) as its timestamp.
+   * A read-only transaction uses (thread.rts) instead, and
+   * does not track or validate the read set.
+   * """
+   *
+   * c.f. §3.1
+   */
+  uint64_t thread_ts;
+  if(this->steps.begin()->readOnly){
+    thread_ts = rts;
+  }else{
+    thread_ts = wts.body;
+  }
+
+  /**
+   * """
+   * A transaction with a timestamp (tx.ts) accessing a record
+   * scans the version list of the record from latest
+   * to earliest order to find a version to use. It ignores
+   * any later version if (v.wts) > (tx.ts).
+   * Otherwise, it checks (v.status). For PENDING, it spin-waits
+   * until the status is changed. For ABORTED, it ignores this version
+   * and proceeds to an earlier version. For COMMITTED, it stops
+   * searching and chooses the version; we refer to this version
+   * as the version visible to the transaction.
+   * """
+   *
+   * cf. §3.2
+   */
+  ver = tuple->loadAcquireLatest();
+  while(ver->loadAcquireWts() > thread_ts){
+    laterVer = ver;
+    ver = ver->loadAcquireNext();
+  }
+  while(ver->status.load(memory_order_acquire) != Committed){
+    while(ver->status.load(memory_order_acquire) == Aborted){
+      ver = ver->loadAcquireNext();
+    }
+  }
+
+  memcpy(returnValue, ver->value, VALUE_SIZE);
+
+  /**
+   * If read-only TX, not track or validate readSet
+   */
+   if(!this->steps.begin()->readOnly){
+     readSet.emplace_back(key, tuple, laterVer, ver);
+   }
+}
+
+void TXExecutor::write(const uint64_t &key) {
+  if(searchWriteSet(key)) return;
+
+
+}
+
+bool TXExecutor::validation() {
+  ERR;
+  return false;
+}
+
+void TXExecutor::writePhase() {
+  ERR;
+}
+
+ReadElement<Tuple> *TXExecutor::searchReadSet(uint64_t key) {
+  for(auto &op: readSet){
+    if(op.key == key) return &op;
+  }
+  return nullptr;
+}
+
+WriteElement<Tuple> *TXExecutor::searchWriteSet(uint64_t key) {
+  for(auto &op: writeSet){
+    if(op.key == key) return &op;
+  }
+  return nullptr;
 }

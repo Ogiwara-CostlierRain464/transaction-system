@@ -33,7 +33,7 @@ static inline void atomicAddGlobalEpoch(){
   }
 }
 
-// 是諾手のWorkerスレッドが最新のEpochを読み込んだか確認する
+// leader以外のWorkerスレッドが最新のEpochを読み込んだか確認する
 static bool checkEpochLoaded(){
   uint64_t nowEpoch = atomicLoadGlobalEpoch();
   for(size_t i = 1; i < THREAD_NUM; i++){
@@ -52,7 +52,7 @@ static void stepEpochTime(uint64_t &epochTimerStart, uint64_t &epochTimerStop){
     epochTimerStart,
     epochTimerStop,
     EPOCH_TIME * CLOCKS_PER_US * 1000)
-     && checkEpochLoaded()){
+     && checkEpochLoaded()){ // 40 ms超えたら
     atomicAddGlobalEpoch();
     epochTimerStart = epochTimerStop;
   }

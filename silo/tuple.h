@@ -25,6 +25,7 @@ struct TidWord{
     uint64_t body;
     struct {
       // NOTE: is ordering correct?
+      // https://docs.microsoft.com/ja-jp/cpp/cpp/cpp-bit-fields?view=vs-2019
       bool lock: 1{};
       bool latest: 1{};
       bool absent: 1{};
