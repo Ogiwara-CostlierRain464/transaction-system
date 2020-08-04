@@ -19,7 +19,7 @@ C++のmemory modelをグラフ化する方法を使えば、どのような結�
 ## Sequential Consistencyとrelax
 Multi processorなプログラムは、Uni processorなプログラムに比べて挙動が把握しにくい。
 コンパイラとCPUが高速化のために操作の入れ替えなどを行うからである。
-どの種類のCPUもSequential Consistencyを実現する命令を提供する。これは、プログラムはソースコードと同じ流れで実行され、
+このため、利便性のためにどの種類のCPUもSequential Consistencyを実現する命令を提供する。これは、プログラムはソースコードと同じ流れで実行され、
 メモリへの書き込みは一つのシーケンスとして捉えられるconsistency modelである。しかしながら、このconsistencyを強制すると
 実行速度に大きな影響を与える。
 
