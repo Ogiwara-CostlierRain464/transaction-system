@@ -12,3 +12,7 @@ KVSilo::Transaction::Value KVSilo::Transaction::read(Key key) {
 void KVSilo::Transaction::write(Key key, Value value) {
   primaryTree->write(key, value);
 }
+
+void KVSilo::Transaction::commit() {
+
+}

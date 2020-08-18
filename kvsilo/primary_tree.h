@@ -2,19 +2,15 @@
 #define TRANSACTIONSYSTEM_PRIMARY_TREE_H
 
 #include <cstdio>
+#include "record.h"
 
 namespace KVSilo{
+
+using Key = size_t;
 
 class PrimaryTree{
 public:
   static constexpr size_t order = 4;
-  using Key = size_t;
-
-  struct Record{
-    int value;
-
-    explicit Record(int value_): value(value_){}
-  };
 
   struct Node{
     void **pointers;

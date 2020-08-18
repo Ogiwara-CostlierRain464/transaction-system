@@ -24,6 +24,7 @@ void KVSilo::Worker::run() {
   // ここでqueryを実行することにより、Worker上で行うのと同じ意味になる
   Transaction trn(primaryTree);
   query(trn);
+
 }
 
 void KVSilo::Worker::addQueryToQueue(const Query &query) {

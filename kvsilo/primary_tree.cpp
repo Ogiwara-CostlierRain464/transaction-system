@@ -94,7 +94,7 @@ void KVSilo::PrimaryTree::findAndPrint(Key key) {
     printf("Record not found under key %zu.\n", key);
   }else{
     printf("Record at %p -- key %zu, value %d.\n",
-      r, key, r->value);
+      r, key, r->value.load(std::memory_order_relaxed));
   }
 }
 
@@ -111,7 +111,7 @@ void KVSilo::PrimaryTree::findAndPrintRange(Key key_start, Key key_end) {
       printf("Key: %zu Location: %p Value: %d\n",
         out_keys[i],
         out_pointers[i],
-        static_cast<Record*>(out_pointers[i])->value
+        static_cast<Record*>(out_pointers[i])->value.load(std::memory_order_relaxed)
         );
     }
   }
@@ -156,7 +156,7 @@ KVSilo::PrimaryTree::Node *KVSilo::PrimaryTree::findLeaf(Key key) {
   return c;
 }
 
-KVSilo::PrimaryTree::Record *KVSilo::PrimaryTree::find(Key key, Node **out_leaf) {
+KVSilo::Record *KVSilo::PrimaryTree::find(Key key, Node **out_leaf) {
   if(root == nullptr){
     if(out_leaf != nullptr){
       *out_leaf = nullptr;
@@ -194,7 +194,7 @@ size_t KVSilo::PrimaryTree::cut(size_t length) {
   }
 }
 
-KVSilo::PrimaryTree::Record *KVSilo::PrimaryTree::makeRecord(int value){
+KVSilo::Record *KVSilo::PrimaryTree::makeRecord(int value){
   auto *new_record = new Record(value);
   return new_record;
 }
@@ -401,7 +401,7 @@ KVSilo::PrimaryTree::Node *KVSilo::PrimaryTree::startNewTree(Key key, Record *pt
   return node;
 }
 
-KVSilo::PrimaryTree::Node *KVSilo::PrimaryTree::insert(KVSilo::PrimaryTree::Key key, int value) {
+KVSilo::PrimaryTree::Node *KVSilo::PrimaryTree::insert(KVSilo::Key key, int value) {
   Record *record_ptr = nullptr;
   Node *leaf = nullptr;
 
@@ -431,7 +431,7 @@ int KVSilo::PrimaryTree::read(Key key) {
   return r->value;
 }
 
-void KVSilo::PrimaryTree::write(KVSilo::PrimaryTree::Key key, int value) {
+void KVSilo::PrimaryTree::write(Key key, int value) {
   Record *r = find(key, nullptr);
   assert(r);
   r->value = value;

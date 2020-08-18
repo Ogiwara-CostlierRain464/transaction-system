@@ -6,6 +6,11 @@
 
 namespace KVSilo{
 
+struct Operation{
+  Key key;
+};
+
+
 class Transaction{
 public:
   using Key = size_t;
@@ -15,9 +20,10 @@ public:
 
   Value read(Key);
   void write(Key key, Value value);
-
+  void commit();
 private:
   PrimaryTree *primaryTree;
+
 };
 
 }
