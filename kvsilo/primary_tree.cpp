@@ -425,6 +425,20 @@ KVSilo::PrimaryTree::Node *KVSilo::PrimaryTree::insert(KVSilo::PrimaryTree::Key 
   return insertInfoLeafAfterSplitting(leaf, key, record_ptr);
 }
 
+int KVSilo::PrimaryTree::read(Key key) {
+  Record *r = find(key, nullptr);
+  assert(r);
+  return r->value;
+}
+
+void KVSilo::PrimaryTree::write(KVSilo::PrimaryTree::Key key, int value) {
+  Record *r = find(key, nullptr);
+  assert(r);
+  r->value = value;
+}
+
+
+
 
 
 
