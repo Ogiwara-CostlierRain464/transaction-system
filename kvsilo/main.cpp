@@ -20,8 +20,7 @@ int main(){
   std::this_thread::sleep_for(1ms);
 
   db.executeTransaction([](Transaction& trn){
-    printf("%d\n", trn.read(2));
-    //assert(trn.read(2) == 4);
+    assert(trn.read(2) == 4);
   });
 
   std::this_thread::sleep_for(1ms);
