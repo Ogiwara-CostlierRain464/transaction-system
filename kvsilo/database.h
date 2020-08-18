@@ -8,6 +8,7 @@
 #include "worker.h"
 #include "logger.h"
 #include "primary_tree.h"
+#include "silo_env.h"
 
 namespace KVSilo{
 
@@ -19,6 +20,8 @@ public:
 
   void executeTransaction(const Query &query);
 
+  void leaderWork();
+
   /**
    * Shutdown all workers.
    */
@@ -27,11 +30,13 @@ public:
 
 private:
   PrimaryTree primaryTree;
+  SiloEnv env;
 
   std::vector<std::thread> workerThreads;
   std::vector<Worker*> workers;
   std::vector<std::thread> loggerThreads;
   std::vector<Logger*> loggers;
+  std::thread leaderThread;
 };
 
 }

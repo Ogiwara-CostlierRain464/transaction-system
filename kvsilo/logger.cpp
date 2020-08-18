@@ -1,6 +1,17 @@
 #include "logger.h"
 #include <iostream>
 
+KVSilo::Logger::Logger(SiloEnv &env_)
+: env(env_)
+{
+}
+
 void KVSilo::Logger::run() {
-  printf("From logger");
+  while(!env.start.load(std::memory_order_relaxed)){
+    std::this_thread::yield();
+  }
+
+  while(!env.stop.load(std::memory_order_relaxed)){
+    std::this_thread::yield();
+  }
 }

@@ -105,7 +105,7 @@ public:
    * @param[out] out_leaf
    * @return
    */
-  Record *find(Key key, Node **out_leaf);
+  Record *find(Key key, Node **out_leaf = nullptr);
   /**
    * Finds the appropriate place to
    * split a node that is too big into two.
@@ -215,7 +215,7 @@ public:
    */
   Node *insert(Key key, int value);
 
-  int read(Key key);
+  Record *read(Key key);
   void write(Key key, int value);
 };
 

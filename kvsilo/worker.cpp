@@ -4,28 +4,46 @@
 KVSilo::Worker::Worker(
   size_t worker_id,
   KVSilo::Logger *logger_,
-  PrimaryTree *tree)
+  PrimaryTree *tree,
+  SiloEnv *env_)
 : workerId(worker_id)
 , logger(logger_)
 , primaryTree(tree)
+, env(env_)
 {
 }
 
 
 void KVSilo::Worker::run() {
-
-  Query query;
-
-  // 新しいQueryが来るまでまつ
-  while(!waitingQueries.try_dequeue(query)){
+  while(!env->start.load(std::memory_order_relaxed)){
     std::this_thread::yield();
   }
 
-  // ここでqueryを実行することにより、Worker上で行うのと同じ意味になる
-  Transaction trn(primaryTree);
-  query(trn);
+  while(!env->stop.load(std::memory_order_relaxed)){
+    Query query;
 
+    // 新しいQueryが来るまでまつ
+    while(!waitingQueries.try_dequeue(query)){
+      if(env->stop.load(std::memory_order_relaxed)){
+        return;
+      }
+
+      std::this_thread::yield();
+    }
+
+    // ewを更新
+    env->workerE[workerId]->store(
+      env->E.load(std::memory_order_relaxed),
+      std::memory_order_relaxed
+    );
+
+    // ここでqueryを実行することにより、Worker上で行うのと同じ意味になる
+    Transaction trn(primaryTree, env);
+    query(trn);
+    trn.commit();
+  }
 }
+
 
 void KVSilo::Worker::addQueryToQueue(const Query &query) {
   waitingQueries.enqueue(query);

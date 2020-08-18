@@ -13,8 +13,8 @@ struct TidWord{
       bool lock: 1{};
       bool latest: 1{};
       bool absent: 1{};
-      uint64_t tid: 29{};
-      uint64_t epoch: 32{};
+      uint32_t tid: 29{};
+      uint32_t epoch: 32{};
     };
   };
 
