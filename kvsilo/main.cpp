@@ -6,6 +6,8 @@
 #include <cassert>
 
 using namespace KVSilo;
+using namespace std::literals::chrono_literals;
+
 
 int main(){
   Database db;
@@ -15,14 +17,14 @@ int main(){
     trn.write(2, value + 3);
   });
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(1ms);
 
   db.executeTransaction([](Transaction& trn){
     printf("%d\n", trn.read(2));
     //assert(trn.read(2) == 4);
   });
 
-  std::this_thread::sleep_for(std::chrono::seconds(3));
+  std::this_thread::sleep_for(1ms);
 
   db.terminate();
 
