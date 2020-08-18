@@ -1,0 +1,13 @@
+#ifndef TRANSACTIONSYSTEM_LOGGER_H
+#define TRANSACTIONSYSTEM_LOGGER_H
+
+namespace KVSilo {
+
+class Logger {
+
+};
+
+}
+
+
+#endif //TRANSACTIONSYSTEM_LOGGER_H

@@ -12,6 +12,8 @@ add_link_options(-lpthread)
 add_subdirectory(silo)
 add_subdirectory(ss2pl)
 add_subdirectory(cicada)
+add_subdirectory(bptree)
+add_subdirectory(kvsilo)
 
 ## Gtest
 
