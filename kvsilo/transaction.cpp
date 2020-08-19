@@ -89,6 +89,7 @@ void KVSilo::Transaction::commit() {
 
   for(auto &w: WSet){
     w.first->value.store(w.second, std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     w.first->tidWord.store(maxTid, std::memory_order_relaxed);
   }
 
