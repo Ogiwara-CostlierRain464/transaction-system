@@ -76,8 +76,6 @@ void KVSilo::Database::leaderWork() {
 void KVSilo::Database::terminate() {
   env.stop.store(true, std::memory_order_relaxed);
 
-
-
   leaderThread.join();
 
   for(auto &t: workerThreads){

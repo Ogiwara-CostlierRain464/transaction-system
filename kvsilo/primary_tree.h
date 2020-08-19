@@ -8,6 +8,9 @@ namespace KVSilo{
 
 using Key = size_t;
 
+/**
+ * 参考: http://www.amittai.com/prose/bplustree.html
+ */
 class PrimaryTree{
 public:
   static constexpr size_t order = 4;
