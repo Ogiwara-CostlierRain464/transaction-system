@@ -18,7 +18,13 @@ struct TidWord{
     };
   };
 
-  TidWord(): body(0){}
+  TidWord()
+  : epoch(0)
+  , tid(0)
+  , absent(false)
+  , latest(true)
+  , lock(false)
+  {}
 
   bool operator==(const TidWord &rhs)const{
     return body == rhs.body;
@@ -36,7 +42,7 @@ struct Record{
   std::atomic_int value;
 
   explicit Record(int value_)
-  : tidWord()
+  : tidWord(TidWord())
   , value(value_){}
 };
 

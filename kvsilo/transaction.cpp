@@ -12,9 +12,6 @@ KVSilo::Transaction::Transaction(PrimaryTree *tree, SiloEnv *env_)
 KVSilo::Transaction::Value KVSilo::Transaction::read(Key key) {
   Record *r = primaryTree->find(key);
 
-  // what should I save to R set?
-  // (record*, tid at that time)
-
   Value data;
 
   TidWord before;
@@ -24,7 +21,7 @@ KVSilo::Transaction::Value KVSilo::Transaction::read(Key key) {
       before = r->tidWord.load(std::memory_order_relaxed);
     }while(before.lock);
 
-    //assert(before.latest);
+    assert(before.latest);
 
     data = r->value;
 
@@ -58,16 +55,19 @@ void KVSilo::Transaction::commit() {
   std::atomic_thread_fence(std::memory_order_release);
 
   for(auto &read: RSet){
-    Record *r = read.first;
-    TidWord tid = read.second;
+    Record *record = read.first;
+    TidWord read_tid = read.second;
 
-    TidWord check = r->tidWord.load(std::memory_order_relaxed);
-    if(tid.tid != check.tid){
-
-      assert(false);
+    TidWord record_tid = record->tidWord.load(std::memory_order_relaxed);
+    if(read_tid.tid != record_tid.tid
+    || !record_tid.latest
+    || (record_tid.lock && !searchWSet(record))
+    ){
+      printf("ABORT.\n");
+      return;
     }
 
-    maxReadTid = std::max(maxReadTid, check);
+    maxReadTid = std::max(maxReadTid, record_tid);
   }
 
 
@@ -80,7 +80,7 @@ void KVSilo::Transaction::commit() {
   tidB = mostRecentlyChosenTid;
   tidB.tid++;
 
-  tidC.epoch = env->E.load(std::memory_order_relaxed);
+  tidC.epoch = e;
 
   TidWord maxTid = std::max({tidA, tidB, tidC});
   maxTid.lock = false;
@@ -117,4 +117,12 @@ void KVSilo::Transaction::lockWSet() {
 
     maxWriteTid = std::max(maxWriteTid, expected);
   }
+}
+
+KVSilo::Record *KVSilo::Transaction::searchWSet(Record *ptr) {
+  // liner search
+  for(auto &w: WSet){
+    if(w.first == ptr) return w.first;
+  }
+  return nullptr;
 }

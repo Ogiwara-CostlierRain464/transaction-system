@@ -67,6 +67,7 @@ void KVSilo::Database::leaderWork() {
     }
 
     env.E.fetch_add(1);
+    printf("Epoch update.\n");
     start = check;
   }
 }
