@@ -1,3 +1,6 @@
+set(ENV{CC} gcc)
+set(ENV{CXX} g++)
+
 project(KVSilo)
 
 set(CXX_STANDARD_REQUIRED ON)
