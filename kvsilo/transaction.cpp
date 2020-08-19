@@ -88,7 +88,7 @@ void KVSilo::Transaction::commit() {
   mostRecentlyChosenTid = maxTid;
 
   for(auto &w: WSet){
-    w.first->value = w.second;
+    w.first->value.store(w.second, std::memory_order_relaxed);
     w.first->tidWord.store(maxTid, std::memory_order_relaxed);
   }
 
