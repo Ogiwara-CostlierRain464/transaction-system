@@ -9,6 +9,7 @@ using namespace KVSilo;
 using namespace std::literals::chrono_literals;
 
 
+
 int main(){
   Database db;
 
@@ -20,7 +21,7 @@ int main(){
 
   std::this_thread::sleep_for(100ms);
 
-  constexpr size_t num_threads = 20000;
+  constexpr size_t num_threads = 30000;
   std::vector<std::thread> threads;
   threads.reserve(num_threads);
   for(size_t i = 0; i < num_threads; ++i){

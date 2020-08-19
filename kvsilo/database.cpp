@@ -67,7 +67,7 @@ void KVSilo::Database::leaderWork() {
     }
 
     env.E.fetch_add(1);
-    printf("Epoch update.\n");
+    //printf("Epoch update.\n");
     start = check;
   }
 }
@@ -83,10 +83,15 @@ void KVSilo::Database::terminate() {
   for(auto &t: workerThreads){
     t.join();
   }
-
+  for(auto &w: workers){
+    delete w;
+  }
 
   for(auto &t: loggerThreads){
     t.join();
+  }
+  for(auto &l: loggers){
+    delete l;
   }
 }
 
