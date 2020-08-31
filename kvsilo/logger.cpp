@@ -1,5 +1,6 @@
 #include "logger.h"
 #include <iostream>
+#include <xmmintrin.h>
 
 KVSilo::Logger::Logger(SiloEnv &env_)
 : env(env_)
@@ -8,10 +9,10 @@ KVSilo::Logger::Logger(SiloEnv &env_)
 
 void KVSilo::Logger::run() {
   while(!env.start.load(std::memory_order_relaxed)){
-    std::this_thread::yield();
+    _mm_pause();
   }
 
   while(!env.stop.load(std::memory_order_relaxed)){
-    std::this_thread::yield();
+    _mm_pause();
   }
 }

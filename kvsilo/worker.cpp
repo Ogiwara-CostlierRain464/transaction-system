@@ -1,5 +1,6 @@
 #include "worker.h"
 #include <thread>
+#include <xmmintrin.h>
 
 KVSilo::Worker::Worker(
   size_t worker_id,
@@ -16,7 +17,7 @@ KVSilo::Worker::Worker(
 
 void KVSilo::Worker::run() {
   while(!env->start.load(std::memory_order_relaxed)){
-    std::this_thread::yield();
+    _mm_pause();
   }
 
   while(!env->stop.load(std::memory_order_relaxed)){
@@ -28,7 +29,7 @@ void KVSilo::Worker::run() {
         return;
       }
 
-      std::this_thread::yield();
+      _mm_pause();
     }
 
     // ewを更新
