@@ -13,6 +13,7 @@ add_subdirectory(silo)
 add_subdirectory(ss2pl)
 add_subdirectory(cicada)
 add_subdirectory(bptree)
+add_subdirectory(masstree)
 add_subdirectory(kvsilo)
 
 ## Gtest
