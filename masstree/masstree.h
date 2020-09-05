@@ -55,7 +55,6 @@ struct InteriorNode: Node{
   Node *child[16] = {};
 
   Node* findChild(Key key){
-    // find child[i] <= key < child[i+1]
     for(size_t i = 0; i < 15; ++i){
       if(key <= key_slice[i]){
         return child[i];
@@ -83,6 +82,17 @@ struct Permutation{
 
 struct BorderNode: Node{
   uint8_t n_removed = 0;
+  /**
+   * border nodeの各key_sliceの中の
+   * sliceの長さを保持する。
+   *
+   * また、sliceの長さは1~10なので、それ以外の数字を
+   * 使ってlink or valueにどちらが含まれているかを
+   * 判別できる。
+   *
+   * 例えば、key_len[1] == 255なら、lv[1]には
+   * pointerが含まれる。
+   */
   uint8_t key_len[15] = {};
   Permutation permutation = {};
   uint64_t key_slice[15] = {};
@@ -123,13 +133,9 @@ InteriorNode *lockedParent(Node *n){
 
 class Masstree{
 public:
-  // Layerの概念はstructで表現する必要はない。
-
   Node *root = nullptr;
 
   BorderNode *findBorder(Key key){
-    // is border判定は、やはりvirtual functionで行うしかない？
-    // まあ、逆にうまいHackでversionだけ見るという手段もある
   retry:
     auto n = root; auto v = stableVersion(n);
 
@@ -153,17 +159,5 @@ public:
     v = v2; goto descend;
   }
 };
-
-// rootの判断が面倒。もしかしたら、C++ではなくCのようにrootを持たせるべき？
-/**
- * まず、基本的な動きはtrie treeと同じ
- * 一つのLayer内で、interiorが増えていく
- *
- * 新しいLayerになっても、結局はrootはborder nodeから始まる
- *
- * まあ、どっかしらに「root is not border」のマーク付けないとな
- * なら、Layerで分けると簡単そう？
- *
- */
 
 #endif //TRANSACTIONSYSTEM_MASSTREE_H
