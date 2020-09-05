@@ -15,7 +15,6 @@ void sample1(){
 
 
   auto tree = new Masstree;
-  auto layer0 = new Layer;
 
   auto t = new InteriorNode;
   t->key_slice[0] = 't';
@@ -48,7 +47,6 @@ Masstree* sample2(){
   // を含む
 
   auto tree = new Masstree;
-  auto layer0 = new Layer;
 
   auto _0 = new InteriorNode;
   auto _01 = new InteriorNode;
@@ -82,8 +80,7 @@ Masstree* sample2(){
   border->lv[0].value = new int(1);
   border->version.is_border = true;
 
-  tree->rootLayer = layer0;
-  layer0->root = _0;
+  tree->root = _0;
   _0->version.is_root = true;
   _0->child[0] = _01;
   _01->parent = _0;

@@ -3,7 +3,7 @@
 
 int main(){
   auto tree = sample2();
-  auto b = static_cast<BorderNode*>(tree->findBorder(0));
+  auto b = tree->findBorder(0);
 
 
   printf("Hello");

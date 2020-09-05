@@ -3,6 +3,10 @@
 
 #include <cstdint>
 
+/**
+ * C++のbit field, 及びAtomicの保証について調べないとね
+ */
+
 struct Version{
   union {
     uint32_t body;
@@ -36,24 +40,21 @@ struct Version{
   }
 };
 
-struct InteriorNode{
-  // atomicにしないん？
+struct InteriorNode;
+
+struct Node{
   Version version = {};
   InteriorNode *parent = nullptr;
+};
+
+struct InteriorNode: Node{
   uint8_t n_keys = 0;
   uint64_t key_slice[15] = {};
-  void *child[16] = {};
+  Node *child[16] = {};
 };
-
-
-struct Layer{
-  // Debug用に、Layer numberの記憶しておくとよいかも
-  void *root = nullptr;
-};
-
 
 union LinkOrValue{
-  Layer *next_layer = nullptr;
+  Node *next_layer = nullptr;
   void *value;
 };
 
@@ -73,9 +74,7 @@ union Permutation{
   };
 };
 
-struct BorderNode{
-  Version version = {};
-  InteriorNode *parent = nullptr;
+struct BorderNode: Node{
   uint8_t n_removed = 0;
   uint8_t key_len[15] = {};
   Permutation permutation = {};
@@ -86,36 +85,27 @@ struct BorderNode{
   KeySuffix key_suffixes = {};
 };
 
-Version stableVersion(void *node){
-  auto n = static_cast<InteriorNode *>(node);
+Version stableVersion(Node *n){
   Version v = n->version;
   while(v.inserting or v.splitting)
     v = n->version;
   return v;
 }
 
-void lock(void *node){
-  auto n = static_cast<InteriorNode *>(node);
+void lock(Node *n){
   //while(n != nullptr and n->version.locked)
 }
 
-void unlock(void *node){
-  auto n = static_cast<InteriorNode *>(node);
+void unlock(Node *n){
+  // do this atomically
 
   if(n->version.inserting)
     ++n->version.v_insert;
   else if (n->version.splitting)
     ++n->version.v_split;
-  //
 }
 
-bool isBorder(void *node){
-  auto n = static_cast<InteriorNode *>(node);
-  return n->version.is_border;
-}
-
-InteriorNode *lockedParent(void *node){
-  auto n = static_cast<InteriorNode *>(node);
+InteriorNode *lockedParent(Node *n){
   retry: InteriorNode *p = n->parent; lock(p);
   if(p != n->parent){
     unlock(p); goto retry;
@@ -128,28 +118,26 @@ class Masstree{
 public:
   // Layerの概念はstructで表現する必要はない。
 
-  Layer *rootLayer = nullptr;
+  Node *root = nullptr;
 
-  void *findBorder(uint64_t key){
+  Node *findBorder(uint64_t key){
     // is border判定は、やはりvirtual functionで行うしかない？
     // まあ、逆にうまいHackでversionだけ見るという手段もある
-    void *root = rootLayer->root;
   retry:
-    void *node = root;
-    auto n = static_cast<InteriorNode *>(node);
-    auto v = stableVersion(n);
+    auto n = root; auto v = stableVersion(n);
 
     if(!v.is_root){
-      root = static_cast<InteriorNode *>(root)->parent; goto retry;
+      root = root->parent; goto retry;
     }
   descend:
-    if(isBorder(n)){
+    if(n->version.is_border){
       return n;
     }
-    void *n1 = n->child[0];
+    auto border_n = static_cast<InteriorNode *>(n);
+    auto n1 = border_n->child[0];
     Version v1 = stableVersion(n1);
     if((n->version ^ v) <= 0b1000'0000'0000'0000'0000'0000'0000'0000){
-      n = static_cast<InteriorNode *>(n1); v = v1; goto descend;
+      n = n1; v = v1; goto descend;
     }
     auto v2 = stableVersion(n);
     if(v2.v_split != v.v_split){
