@@ -51,6 +51,14 @@ struct Node{
 
 struct InteriorNode: Node{
   uint8_t n_keys = 0;
+  /**
+   * 0x0123の2桁目について、0と2の間のnodeに誘導したい時には
+   *
+   * [0x00FF] (Node) [0x02FF]
+   *
+   * のようにkeyを設計すれば、findChildの実装(≤)によって、何桁目を
+   * 比較しているかを明示的にする必要がなくなる。
+   */
   uint64_t key_slice[15] = {};
   Node *child[16] = {};
 
@@ -81,6 +89,8 @@ struct Permutation{
 };
 
 struct BorderNode: Node{
+  static constexpr uint8_t nextLayerKeyLen = 255;
+
   uint8_t n_removed = 0;
   /**
    * border nodeの各key_sliceの中の

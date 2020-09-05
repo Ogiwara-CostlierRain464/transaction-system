@@ -1,7 +1,12 @@
-#include "../../masstree/masstree.h"
 #include <gtest/gtest.h>
+#include "../../masstree/masstree.h"
+#include "../../masstree/verify.h"
+#include "../../masstree/sample.h"
 
 class MasstreeTest: public ::testing::Test{
+  MasstreeTest(){
+    verify_struct_property();
+  }
 };
 
 struct DummyNode: Node{
@@ -36,4 +41,16 @@ TEST(MasstreeTest, findChild2){
 
   auto n1 = reinterpret_cast<DummyNode *>(n.findChild(2));
   EXPECT_EQ(n1->value, 2);
+}
+
+TEST(MasstreeTest, sample2){
+  auto tree = sample2();
+  auto b = tree->findBorder(0x01234567);
+  EXPECT_EQ(*static_cast<int *>(b->lv->value), 1);
+}
+
+TEST(MasstreeTest, sample3){
+  auto tree = sample3();
+  auto b = tree->findBorder(0x01234567);
+  EXPECT_EQ(b->key_len[0], BorderNode::nextLayerKeyLen);
 }

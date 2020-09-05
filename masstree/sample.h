@@ -127,23 +127,23 @@ Masstree* sample3(){
 
 // assign
   _0->n_keys = 1;
-  _0->key_slice[0] = 0x00000000;
+  _0->key_slice[0] = 0x0FFF'FFFF;
   _01->n_keys = 1;
-  _01->key_slice[0] = 0x01000000;
+  _01->key_slice[0] = 0x01FF'FFFF;
   _012->n_keys = 1;
-  _012->key_slice[0] = 0x01200000;
+  _012->key_slice[0] = 0x012F'FFFF;
   _0123->n_keys = 1;
-  _0123->key_slice[0] = 0x01230000;
+  _0123->key_slice[0] = 0x0123'FFFF;
   _01234->n_keys = 1;
-  _01234->key_slice[0] = 0x01234000;
+  _01234->key_slice[0] = 0x0123'4FFF;
   _012345->n_keys = 1;
-  _012345->key_slice[0] = 0x01234500;
+  _012345->key_slice[0] = 0x0123'45FF;
   _0123456->n_keys = 1;
-  _0123456->key_slice[0] = 0x01234560;
+  _0123456->key_slice[0] = 0x0123'456F;
   _01234567->n_keys = 1;
-  _01234567->key_slice[0] = 0x01234567;
+  _01234567->key_slice[0] = 0x0123'4567;
 
-  border->key_len[0] = 255;
+  border->key_len[0] = BorderNode::nextLayerKeyLen;
   border->lv[0].next_layer = new_layer;
   border->version.is_border = true;
 
