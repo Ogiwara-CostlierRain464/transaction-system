@@ -1,39 +1,19 @@
-#include <iostream>
-#include <string>
 #include "sample.h"
+#include "verify.h"
 
-using namespace std;
-
-std::string ver_string(int a,int b, int c){
-  string s;
-  s += (to_string(a) + "." + to_string(b) + "." + to_string(c));
-  return s;
-}
-
-void check(){
-  const char *true_cxx =
-#ifdef __clang__
-  "clang";
-#else
-  "g++";
-#endif
-
-  std::string true_cxx_ver =
-#ifdef __clang__
-    "clang";
-#else
-  ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-#endif
-
-  printf("Compiler: %s, %s\n", true_cxx, true_cxx_ver.c_str());
-}
+struct S {
+  // will usually occupy 2 bytes:
+  // 3 bits: value of b1
+  // 2 bits: unused
+  // 6 bits: value of b2
+  // 2 bits: value of b3
+  // 3 bits: unused
+  //
+  unsigned char b1 : 3, : 2, b2 : 6, b3 : 2;
+};
 
 int main(){
-  check();
-
+  verify_union_size();
   auto tree = sample2();
   auto b = tree->findBorder(0);
-
-
-  printf("Hello");
 }

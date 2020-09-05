@@ -8,19 +8,20 @@
  * あとはCastの種類
  */
 
+// 論文のメモのように改造。
 struct Version{
   union {
     uint32_t body;
     struct {
-      bool locked: 1;
-      bool inserting: 1;
-      bool splitting: 1;
-      bool deleted: 1;
-      bool is_root: 1;
+      uint16_t v_split: 16;
+      uint8_t v_insert: 8;
+      bool : 2;
       bool is_border: 1;
-      uint8_t v_insert: 7;
-      uint32_t v_split: 18;
-      bool unused: 1;
+      bool is_root: 1;
+      bool deleted: 1;
+      bool splitting: 1;
+      bool inserting: 1;
+      bool locked: 1;
     };
   };
 
@@ -33,7 +34,6 @@ struct Version{
     , is_border{false}
     , v_insert{0}
     , v_split{0}
-    , unused{false}
   {}
 
   uint32_t operator ^(const Version &rhs){
@@ -63,16 +63,11 @@ struct KeySuffix{
   ; // ?
 };
 
-struct uint4_t{
-  uint8_t body: 4;
-};
-
-union Permutation{
+// こっちは単なる64bit数として捉えた方が良さそう
+struct Permutation{
   uint64_t body;
-  struct {
-    uint4_t key_index[15];
-    uint4_t n_keys;
-  };
+
+  // index等によるアクセスはmethodとして
 };
 
 struct BorderNode: Node{
@@ -134,7 +129,7 @@ public:
     if(n->version.is_border){
       return n;
     }
-    auto border_n = static_cast<InteriorNode *>(n);
+    auto border_n = reinterpret_cast<InteriorNode *>(n);
     auto n1 = border_n->child[0];
     Version v1 = stableVersion(n1);
     if((n->version ^ v) <= 0b1000'0000'0000'0000'0000'0000'0000'0000){
