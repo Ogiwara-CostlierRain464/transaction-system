@@ -43,8 +43,8 @@ void sample1(){
 }
 
 Masstree* sample2(){
-  // 0x01234567AB: 1
-  // を含む
+  // 0x01234567AB: 1 を含む
+  // 0x01234567まではinterior nodeに含まれてて、ABがborder nodeに含まれる
 
   auto tree = new Masstree;
 

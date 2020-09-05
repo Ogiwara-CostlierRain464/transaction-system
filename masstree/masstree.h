@@ -2,14 +2,15 @@
 #define TRANSACTIONSYSTEM_MASSTREE_H
 
 #include <cstdint>
+#include <cstddef>
 
-/**
- * C++のbit field, 及びAtomicの保証について調べないとね
- * あとはCastの種類
- */
+using Key = uint64_t;
 
 // 論文のメモのように改造。
 struct Version{
+
+  static constexpr uint32_t lock = 0b1000'0000'0000'0000'0000'0000'0000'0000;
+
   union {
     uint32_t body;
     struct {
@@ -52,6 +53,16 @@ struct InteriorNode: Node{
   uint8_t n_keys = 0;
   uint64_t key_slice[15] = {};
   Node *child[16] = {};
+
+  Node* findChild(Key key){
+    // find child[i] <= key < child[i+1]
+    for(size_t i = 0; i < 15; ++i){
+      if(key <= key_slice[i]){
+        return child[i];
+      }
+    }
+    return child[15];
+  }
 };
 
 union LinkOrValue{
@@ -116,7 +127,7 @@ public:
 
   Node *root = nullptr;
 
-  Node *findBorder(uint64_t key){
+  BorderNode *findBorder(Key key){
     // is border判定は、やはりvirtual functionで行うしかない？
     // まあ、逆にうまいHackでversionだけ見るという手段もある
   retry:
@@ -127,12 +138,12 @@ public:
     }
   descend:
     if(n->version.is_border){
-      return n;
+      return reinterpret_cast<BorderNode *>(n);
     }
-    auto border_n = reinterpret_cast<InteriorNode *>(n);
-    auto n1 = border_n->child[0];
+    auto interior_n = reinterpret_cast<InteriorNode *>(n);
+    auto n1 = interior_n->findChild(key);
     Version v1 = stableVersion(n1);
-    if((n->version ^ v) <= 0b1000'0000'0000'0000'0000'0000'0000'0000){
+    if((n->version ^ v) <= Version::lock){
       n = n1; v = v1; goto descend;
     }
     auto v2 = stableVersion(n);

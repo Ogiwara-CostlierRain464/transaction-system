@@ -2,10 +2,28 @@
 #define TRANSACTIONSYSTEM_VERIFY_H
 
 #include "masstree.h"
+#include <string>
+#include <atomic>
 
-void verify_union_size(){
+template <typename T>
+struct is_atomic{
+  static constexpr bool value =
+    std::is_trivially_copyable<T>::value
+    && std::is_copy_constructible<T>::value
+    && std::is_move_constructible<T>::value
+    && std::is_copy_assignable<T>::value
+    && std::is_move_assignable<T>::value;
+};
+
+void verify_struct_property(){
+
+  // check struct/union size.
   static_assert(sizeof(Version) == 4);
   static_assert(sizeof(Permutation) == 8);
+
+  // check atomic.
+  static_assert(is_atomic<Version>::value);
+
 }
 
 std::string ver_string(int a,int b, int c){
