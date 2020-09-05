@@ -10,11 +10,11 @@ struct TidWord{
   union {
     uint64_t body;
     struct {
-      bool lock: 1{};
-      bool latest: 1{};
-      bool absent: 1{};
-      uint32_t tid: 29{};
-      uint32_t epoch: 32{};
+      bool lock: 1;
+      bool latest: 1;
+      bool absent: 1;
+      uint32_t tid: 29;
+      uint32_t epoch: 32;
     };
   };
 

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <atomic>
 #include <vector>
+#include <memory>
 
 namespace KVSilo{
 

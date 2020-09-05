@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include "primary_tree.h"
 
 void KVSilo::PrimaryTree::enqueue(Node *new_node) {

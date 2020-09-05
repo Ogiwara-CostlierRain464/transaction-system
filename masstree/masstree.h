@@ -5,6 +5,7 @@
 
 /**
  * C++のbit field, 及びAtomicの保証について調べないとね
+ * あとはCastの種類
  */
 
 struct Version{
