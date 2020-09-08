@@ -46,7 +46,7 @@ struct Key{
   }
 
   bool hasNext() {
-    if (size == cursor)
+    if (size == cursor + 1)
       return false;
 
     return true;
@@ -224,6 +224,7 @@ struct BorderNode: Node{
 
 
     if(!key.hasNext()){ // next key sliceがない場合
+
       for(size_t i = 0; i < 15; ++i){
         if(key_slice[i] == current.slice and key_len[i] == current.size){
           return std::pair(VALUE, lv[i]);
@@ -317,6 +318,7 @@ void *get(Node *root, Key k){
   forward:
   if(v.deleted)
     goto retry;
+
   auto t_lv = n->extractLinkOrValueFor(k); auto t = t_lv.first; auto lv = t_lv.second;
   if((n->version ^ v) > Version::lock){
     v = stableVersion(n); auto next = n->next;
@@ -332,6 +334,7 @@ void *get(Node *root, Key k){
     root = lv.next_layer;
     // advance k to next slice
     k.next();
+
     goto retry;
   }else{ // t == UNSTABLE
     goto forward;

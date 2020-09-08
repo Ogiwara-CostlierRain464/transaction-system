@@ -80,10 +80,10 @@ Masstree *sample3(){
   l2_root->key_len[0] = 2;
   l2_root->lv[0].value = new int(1);
   l2_root->key_slice[1] = 0x0C0D;
-  l2_root->key_len[0] = 2;
-  l2_root->lv[0].value = new int(2);
-  l1_root->version.is_root = true;
-  l1_root->version.is_border = true;
+  l2_root->key_len[1] = 2;
+  l2_root->lv[1].value = new int(2);
+  l2_root->version.is_root = true;
+  l2_root->version.is_border = true;
 
   return tree;
 }
