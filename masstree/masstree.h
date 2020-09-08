@@ -98,22 +98,30 @@ struct BorderNode: Node{
   BorderNode *prev = nullptr;
   KeySuffix key_suffixes = {};
 
+  /**
+   * BorderNode内で、keyに該当するLinkOrValueを取得する。
+   * @param key
+   * @return
+   */
   std::pair<ExtractResult, LinkOrValue> extractLinkOrValueFor(Key key){
-    // next key sliceがある場合と、ない場合に分けられる
-    // ない場合には、current key slice・sizeと合致するものをBorder nodeから探す
-    //
-    // ある場合には、current key sliceと合致するものをBorder nodeから探す
-    // key lenを元に、unstableかlayerか判断する
-
+    /**
+     * 現在のkey sliceの次のkey sliceがあるかどうかで場合わけ
+     *
+     * 次のkey sliceがない場合は、現在のkey sliceの長さは1~8
+     * 15個全てのスロットについて、現在のkey sliceと一致するかどうか確認し、valueを返す
+     *
+     * 次のkey sliceがある場合は、現在のkey sliceの長さは8
+     * 現在のkey sliceとnode中のkey_sliceが一致する場所を見つけ、そこでさらに場合わけ
+     *
+     * もし、key_lenが8の場合は、残りのkey sliceは一個のみであり、次のkey sliceはKey Suffixに保存されている
+     * のでそこからvalueを返す
+     * key_lenがLAYERを表す場合は、次のlayerを返す
+     * key_lenがUNSTABLEの場合は、UNSTABLEを返す
+     *
+     * どれにも該当しない場合、NOTFOUNDを返す
+     *
+     */
     auto current = key.getCurrentSlice();
-
-    // hasNextは、必ずしも次のLayerがあるとは限らないぞ…
-
-
-    // とりあえず、現在のKeyがあるかどうかを調べる
-    // 1~7か、ぴったり 8文字か、9文字以上かもしれない
-    // 9文字以上でも、同じlayerに治る場合と、そうでない場合がある。
-
 
     if(!key.hasNext()){ // next key sliceがない場合
 
@@ -130,6 +138,8 @@ struct BorderNode: Node{
             // suffixの中を見る
             if(key_suffixes[i].slice == key.next().slice){
               return std::pair(VALUE, lv[i]);
+            }else{
+              return std::pair(NOTFOUND, LinkOrValue{});
             }
           }
 
