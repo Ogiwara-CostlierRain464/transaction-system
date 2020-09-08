@@ -1,4 +1,5 @@
 #include <mutex>
+#include <algorithm>
 #include "txn_executor.h"
 #include "../common/atomic_wrapper.h"
 #include "../common/step.h"

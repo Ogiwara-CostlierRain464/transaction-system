@@ -78,17 +78,19 @@ struct BorderNode: Node{
   uint8_t n_removed = 0;
   /**
    * border nodeの各key_sliceの中の
-   * sliceの長さ(byte数)を保持する。
+   * sliceの長さ(byte数)を表す
    *
-   * また、sliceの長さは0~9なので、それ以外の数字を
-   * 使ってlink or valueにどちらが含まれているかを
-   * 判別できる。
+   * 1~7の時
+   * LinkOrValueにはvalueがある
    *
-   * 例えば、key_len[1] == 255なら、lv[1]には
-   * pointerが含まれる。
+   * 8の時
+   * 残りのSuffixがkey_suffixesにある
    *
-   * 当然、suffixの長さが9以上の場合には8文字分だけ確認を取り、
-   * 次のLayerへ移動する
+   * 254の時
+   * LinkOrValueの状態が不安定、readerは最初からやり直し
+   *
+   * 255の時
+   * LinkOrValueにはnext_layerがある
    */
   uint8_t key_len[15] = {};
   Permutation permutation = {};
