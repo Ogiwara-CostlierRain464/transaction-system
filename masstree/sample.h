@@ -25,8 +25,8 @@ Masstree *sample1(){
   root->key_slice[1] = 0x0102030405060708;
   root->key_len[1] = 8;
   root->lv[1].value = new int(2);
-  root->version.is_root = true;
-  root->version.is_border = true;
+  Version v; v.is_root = true;v.is_border = true;
+  root->version.store(v);
 
   return tree;
 }
@@ -51,8 +51,8 @@ Masstree* sample2(){
   root->key_len[0] = 8;
   root->key_suffixes.set(0,KeySlice(0x0A0B, 2));
   root->lv[0].value = new int(1);
-  root->version.is_root = true;
-  root->version.is_border = true;
+  Version v; v.is_root = true;v.is_border = true;
+  root->version.store(v);
 
   return tree;
 }
@@ -73,8 +73,8 @@ Masstree *sample3(){
   l1_root->key_slice[0] = 0x0001020304050607;
   l1_root->key_len[0] = BorderNode::key_len_layer;
   l1_root->lv[0].next_layer = l2_root;
-  l1_root->version.is_root = true;
-  l1_root->version.is_border = true;
+  Version v1; v1.is_root = true;v1.is_border = true;
+  l1_root->version.store(v1);
 
   l2_root->key_slice[0] = 0x0A0B;
   l2_root->key_len[0] = 2;
@@ -82,8 +82,8 @@ Masstree *sample3(){
   l2_root->key_slice[1] = 0x0C0D;
   l2_root->key_len[1] = 2;
   l2_root->lv[1].value = new int(2);
-  l2_root->version.is_root = true;
-  l2_root->version.is_border = true;
+  Version v2; v2.is_root = true;v2.is_border = true;
+  l2_root->version.store(v2);
 
   return tree;
 }

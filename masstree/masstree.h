@@ -9,14 +9,20 @@
 #include <vector>
 #include <algorithm>
 #include <optional>
+#include <atomic>
 #include "version.h"
 #include "key.h"
 #include "permutation.h"
 
+using std::memory_order_acquire;
+using std::memory_order_release;
+using std::memory_order_acq_rel;
+
+
 struct InteriorNode;
 
 struct Node{
-  Version version = {};
+  std::atomic<Version> version = {};
   InteriorNode *parent = nullptr;
 };
 
@@ -91,6 +97,8 @@ struct BorderNode: Node{
    *
    * 255の時
    * LinkOrValueにはnext_layerがある
+   *
+   * NOTE: どんな時にslice長が0byteになるか考察する
    */
   uint8_t key_len[15] = {};
   Permutation permutation = {};
@@ -160,23 +168,39 @@ struct BorderNode: Node{
 };
 
 Version stableVersion(Node *n){
-  Version v = n->version;
+  Version v = n->version.load(memory_order_acquire);
   while(v.inserting or v.splitting)
-    v = n->version;
+    v = n->version.load(memory_order_acquire);
   return v;
 }
 
 void lock(Node *n){
-  //while(n != nullptr and n->version.locked)
+  assert(n != nullptr);
+
+  for(;;){
+    Version expected = n->version.load(memory_order_acquire);
+    Version desired = expected;
+    desired.locked = true;
+
+    if(n->version.compare_exchange_weak(expected, desired)){
+      break;
+    }
+  }
 }
 
 void unlock(Node *n){
-  // do this atomically
+  auto copy_v = n->version.load(memory_order_acquire);
 
-  if(n->version.inserting)
-    ++n->version.v_insert;
-  else if (n->version.splitting)
-    ++n->version.v_split;
+  if(copy_v.inserting){
+    ++copy_v.v_insert;
+  } else if(copy_v.splitting){
+    ++copy_v.v_split;
+  }
+  copy_v.locked = false;
+  copy_v.inserting = false;
+  copy_v.splitting = false;
+
+  n->version.store(copy_v, memory_order_release);
 }
 
 InteriorNode *lockedParent(Node *n){
@@ -200,13 +224,13 @@ std::pair<BorderNode *, Version> findBorder(Node *root, Key key){
     root = root->parent; goto retry;
   }
   descend:
-  if(n->version.is_border){
+  if(n->version.load(memory_order_acquire).is_border){
     return std::pair(reinterpret_cast<BorderNode *>(n), v);
   }
   auto interior_n = reinterpret_cast<InteriorNode *>(n);
   auto n1 = interior_n->findChild(key.getCurrentSlice());
   Version v1 = stableVersion(n1);
-  if((n->version ^ v) <= Version::lock){
+  if((n->version.load(memory_order_acquire) ^ v) <= Version::lock){
     n = n1; v = v1; goto descend;
   }
   auto v2 = stableVersion(n);
@@ -224,7 +248,7 @@ void *get(Node *root, Key k){
     goto retry;
 
   auto t_lv = n->extractLinkOrValueFor(k); auto t = t_lv.first; auto lv = t_lv.second;
-  if((n->version ^ v) > Version::lock){
+  if((n->version.load(memory_order_acquire) ^ v) > Version::lock){
     v = stableVersion(n); auto next = n->next;
     while(!v.deleted and next != nullptr /**/){
       n = next; v = stableVersion(n); next = n->next;
