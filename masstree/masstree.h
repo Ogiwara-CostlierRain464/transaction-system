@@ -10,26 +10,42 @@
 #include <algorithm>
 #include <optional>
 
-// (keyのslice, sliceの長さ)
-using KeySlice = std::pair<uint64_t, uint8_t>;
+struct KeySlice{
+  // 最大8byteのスライス
+  uint64_t slice = 0;
+  // スライスの長さ(1~8)
+  uint8_t size = 0;
+
+  KeySlice() = default;
+
+  explicit KeySlice(uint64_t slice_, uint8_t size_)
+  : slice(slice_)
+  , size(size_)
+  {
+    assert(1 <= size and size <= 8);
+  }
+
+  bool operator==(const KeySlice &rhs) const{
+    return slice == rhs.slice and size == rhs.size;
+  }
+
+  bool operator!=(const KeySlice &rhs) const{
+    return !(*this == rhs);
+  }
+};
 
 struct Key{
-  // (KeySlice, sliceの長さ) の配列
-  // 今のところ、最大のKeyサイズは8 * 4 = 32byte.
-  std::array<KeySlice, 4> body;
+  std::vector<KeySlice> body;
   size_t size;
   size_t cursor = 0;
 
-  Key(std::array<KeySlice, 4> &body_ , size_t size_)
+  Key(std::vector<KeySlice> &body_ , size_t size_)
   : body(std::move(body_)), size(size_)
   {
     assert(1 <= size and size <= 8);
   }
 
   bool hasNext() {
-    if (cursor == 3) // not any more
-      return false;
-
     if (size == cursor)
       return false;
 
@@ -41,6 +57,7 @@ struct Key{
   }
 
   KeySlice next(){
+    assert(hasNext());
     ++cursor;
     return body[cursor];
   }
@@ -115,7 +132,7 @@ struct InteriorNode: Node{
      * B+ treeと同じ走査方法
      */
     for(size_t i = 0; i < n_keys; ++i){
-      if(key.first <= key_slice[i]){
+      if(key.slice <= key_slice[i]){
         return child[i];
       }
     }
@@ -133,14 +150,18 @@ union LinkOrValue{
  * Border nodes store the suffixes of their keys in key-suffixes
  * data structure.
  *
- * おそらく、調べているKeyが本当にあるかどうかを早めにチェックするのに使う
- * 簡単のため、まずはKeySuffixの実装をスキップし、「Keyが存在しなかった」の発見を
- * 遅らせる。
- *
  */
 struct KeySuffix{
-  bool contain(Key key){
-    return true;
+  std::array<KeySlice, 15> body;
+
+  KeySuffix(){}
+
+  KeySlice operator[](size_t i){
+    return body[i];
+  }
+
+  void set(size_t i, KeySlice slice){
+    body[i] = slice;
   }
 };
 
@@ -186,10 +207,6 @@ struct BorderNode: Node{
   KeySuffix key_suffixes = {};
 
   std::pair<ExtractResult, LinkOrValue> extractLinkOrValueFor(Key key){
-    if(!key_suffixes.contain(key)){
-      return std::pair(NOTFOUND, LinkOrValue{});
-    }
-
     // next key sliceがある場合と、ない場合に分けられる
     // ない場合には、current key slice・sizeと合致するものをBorder nodeから探す
     //
@@ -198,15 +215,31 @@ struct BorderNode: Node{
 
     auto current = key.getCurrentSlice();
 
+    // hasNextは、必ずしも次のLayerがあるとは限らないぞ…
+
+
+    // とりあえず、現在のKeyがあるかどうかを調べる
+    // 1~7か、ぴったり 8文字か、9文字以上かもしれない
+    // 9文字以上でも、同じlayerに治る場合と、そうでない場合がある。
+
+
     if(!key.hasNext()){ // next key sliceがない場合
       for(size_t i = 0; i < 15; ++i){
-        if(key_slice[i] == current.first and key_len[i] == current.second){
+        if(key_slice[i] == current.slice and key_len[i] == current.size){
           return std::pair(VALUE, lv[i]);
         }
       }
     }else{ // next key sliceがある場合
       for(size_t i = 0; i < 15; ++i){
-        if(key_slice[i] == current.first){
+
+        if(key_slice[i] == current.slice){
+          if(key_len[i] == 8){
+            // suffixの中を見る
+            if(key_suffixes[i].slice == key.next().slice){
+              return std::pair(VALUE, lv[i]);
+            }
+          }
+
           if(key_len[i] == BorderNode::key_len_layer){
             return std::pair(LAYER, lv[i]);
           }
@@ -250,57 +283,60 @@ InteriorNode *lockedParent(Node *n){
   return p;
 }
 
-class Masstree{
-public:
+struct Masstree{
   Node *root = nullptr;
-
-  std::pair<BorderNode *, Version> findBorder(Key key){
-  retry:
-    auto n = root; auto v = stableVersion(n);
-
-    if(!v.is_root){
-      root = root->parent; goto retry;
-    }
-  descend:
-    if(n->version.is_border){
-      return std::pair(reinterpret_cast<BorderNode *>(n), v);
-    }
-    auto interior_n = reinterpret_cast<InteriorNode *>(n);
-    auto n1 = interior_n->findChild(key.getCurrentSlice());
-    Version v1 = stableVersion(n1);
-    if((n->version ^ v) <= Version::lock){
-      n = n1; v = v1; goto descend;
-    }
-    auto v2 = stableVersion(n);
-    if(v2.v_split != v.v_split){
-      goto retry;
-    }
-    v = v2; goto descend;
-  }
-
-  void *get(Key key){
-    auto root_ = this->root;
-  retry:
-    auto n_v = findBorder(key); auto n = n_v.first; auto v = n_v.second;
-  forward:
-    if(v.deleted)
-      goto retry;
-    auto t_lv = n->extractLinkOrValueFor(key); auto t = t_lv.first; auto lv = t_lv.second;
-    if((n->version ^ v) > Version::lock){
-      v = stableVersion(n); auto next = n->next;
-      while(!v.deleted and next != nullptr /**/){
-        n = next; v = stableVersion(n); next = n->next;
-      }
-      goto forward;
-    }else if(t == NOTFOUND){
-      return nullptr;
-    }else if(t == VALUE){
-      return lv.value;
-    }else if(t == LAYER){
-      // 関数切り出した方がよさそう
-    }
-
-  }
 };
+
+std::pair<BorderNode *, Version> findBorder(Node *root, Key key){
+  retry:
+  auto n = root; auto v = stableVersion(n);
+
+  if(!v.is_root){
+    root = root->parent; goto retry;
+  }
+  descend:
+  if(n->version.is_border){
+    return std::pair(reinterpret_cast<BorderNode *>(n), v);
+  }
+  auto interior_n = reinterpret_cast<InteriorNode *>(n);
+  auto n1 = interior_n->findChild(key.getCurrentSlice());
+  Version v1 = stableVersion(n1);
+  if((n->version ^ v) <= Version::lock){
+    n = n1; v = v1; goto descend;
+  }
+  auto v2 = stableVersion(n);
+  if(v2.v_split != v.v_split){
+    goto retry;
+  }
+  v = v2; goto descend;
+}
+
+void *get(Node *root, Key k){
+  retry:
+  auto n_v = findBorder(root, k); auto n = n_v.first; auto v = n_v.second;
+  forward:
+  if(v.deleted)
+    goto retry;
+  auto t_lv = n->extractLinkOrValueFor(k); auto t = t_lv.first; auto lv = t_lv.second;
+  if((n->version ^ v) > Version::lock){
+    v = stableVersion(n); auto next = n->next;
+    while(!v.deleted and next != nullptr /**/){
+      n = next; v = stableVersion(n); next = n->next;
+    }
+    goto forward;
+  }else if(t == NOTFOUND){
+    return nullptr;
+  }else if(t == VALUE){
+    return lv.value;
+  }else if(t == LAYER){
+    root = lv.next_layer;
+    // advance k to next slice
+    k.next();
+    goto retry;
+  }else{ // t == UNSTABLE
+    goto forward;
+  }
+
+}
 
 #endif //TRANSACTIONSYSTEM_MASSTREE_H

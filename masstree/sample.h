@@ -49,6 +49,7 @@ Masstree* sample2(){
 
   root->key_slice[0] = 0x0001020304050607;
   root->key_len[0] = 8;
+  root->key_suffixes.set(0,KeySlice(0x0A0B, 2));
   root->lv[0].value = new int(1);
   root->version.is_root = true;
   root->version.is_border = true;
@@ -66,6 +67,8 @@ Masstree *sample3(){
   auto tree = new Masstree;
   auto l1_root = new BorderNode;
   auto l2_root = new BorderNode;
+
+  tree->root = l1_root;
 
   l1_root->key_slice[0] = 0x0001020304050607;
   l1_root->key_len[0] = BorderNode::key_len_layer;

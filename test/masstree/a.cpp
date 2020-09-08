@@ -29,7 +29,7 @@ TEST(MasstreeTest, findChild1){
   n.n_keys = 1;
   n.key_slice[0] = 0x01;
 
-  auto n1 = reinterpret_cast<DummyNode *>(n.findChild(pair(0x00, 1)));
+  auto n1 = reinterpret_cast<DummyNode *>(n.findChild(KeySlice(0x00, 1)));
   EXPECT_EQ(n1->value, 0);
 }
 
@@ -48,24 +48,35 @@ TEST(MasstreeTest, findChild2){
   n.child[1] = &dn2;
   n.key_slice[1] = 0x03;
 
-  auto n1 = reinterpret_cast<DummyNode *>(n.findChild(pair(0x02,1)));
+  auto n1 = reinterpret_cast<DummyNode *>(n.findChild(KeySlice(0x02,1)));
   EXPECT_EQ(n1->value, 2);
 }
 
-TEST(MasstreeTest, sample2){
+TEST(MasstreeTest, sample2){ // NO LINT
   auto tree = sample2();
-  array<KeySlice, 4> slices = {pair(0x0001020304050607, 8)};
+  vector<KeySlice> slices = {KeySlice(0x0001020304050607, 8)};
   Key key(slices, 1);
 
-  auto b = tree->findBorder(key);
+  auto b = findBorder(tree->root, key);
   EXPECT_EQ(*static_cast<int *>(b.first->lv[0].value), 1);
 }
 
 TEST(MasstreeTest, sample3){
   auto tree = sample3();
-  array<KeySlice, 4> slices = {pair(0x0001020304050607, 8), pair(0x0A0B, 2)};
+  vector<KeySlice> slices = {KeySlice(0x0001020304050607, 8), KeySlice(0x0A0B, 2)};
   Key key(slices, 1);
 
-  auto b = tree->findBorder(key);
+  auto b = findBorder(tree->root, key);
   EXPECT_EQ(b.first->key_len[0], BorderNode::key_len_layer);
+}
+
+TEST(MasstreeTest, get1){
+  auto tree = sample2();
+  vector<KeySlice> slices = {KeySlice(0x0001020304050607, 8), KeySlice(0x0A0B, 2)};
+  Key key(slices, 2);
+
+  auto p = get(tree->root, key);
+
+  assert(p != nullptr);
+  EXPECT_EQ(*reinterpret_cast<int *>(p), 1);
 }
