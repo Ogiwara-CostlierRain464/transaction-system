@@ -9,111 +9,9 @@
 #include <vector>
 #include <algorithm>
 #include <optional>
-
-struct KeySlice{
-  // 最大8byteのスライス
-  uint64_t slice = 0;
-  // スライスの長さ(1~8)
-  uint8_t size = 0;
-
-  KeySlice() = default;
-
-  explicit KeySlice(uint64_t slice_, uint8_t size_)
-  : slice(slice_)
-  , size(size_)
-  {
-    assert(1 <= size and size <= 8);
-  }
-
-  bool operator==(const KeySlice &rhs) const{
-    return slice == rhs.slice and size == rhs.size;
-  }
-
-  bool operator!=(const KeySlice &rhs) const{
-    return !(*this == rhs);
-  }
-};
-
-struct Key{
-  std::vector<KeySlice> body;
-  size_t size;
-  size_t cursor = 0;
-
-  Key(std::vector<KeySlice> &body_ , size_t size_)
-  : body(std::move(body_)), size(size_)
-  {
-    assert(1 <= size and size <= 8);
-  }
-
-  bool hasNext() {
-    if (size == cursor + 1)
-      return false;
-
-    return true;
-  }
-
-  KeySlice getCurrentSlice(){
-    return body[cursor];
-  }
-
-  KeySlice next(){
-    assert(hasNext());
-    ++cursor;
-    return body[cursor];
-  }
-
-  bool operator==(const Key &rhs){
-    if(size != rhs.size){
-      return false;
-    }
-    for(size_t i = 0; i < size; ++i){
-      if(body[i] != rhs.body[i]){
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool operator!=(const Key &rhs){
-    return !(*this == rhs);
-  }
-};
-
-// 論文のメモのように改造。
-struct Version{
-
-  static constexpr uint32_t lock = 0b1000'0000'0000'0000'0000'0000'0000'0000;
-
-  union {
-    uint32_t body;
-    struct {
-      uint16_t v_split: 16;
-      uint8_t v_insert: 8;
-      bool : 2;
-      bool is_border: 1;
-      bool is_root: 1;
-      bool deleted: 1;
-      bool splitting: 1;
-      bool inserting: 1;
-      bool locked: 1;
-    };
-  };
-
-  Version()
-    : locked{false}
-    , inserting{false}
-    , splitting{false}
-    , deleted{false}
-    , is_root{false}
-    , is_border{false}
-    , v_insert{0}
-    , v_split{0}
-  {}
-
-  uint32_t operator ^(const Version &rhs){
-    return (body ^ rhs.body);
-  }
-};
+#include "version.h"
+#include "key.h"
+#include "permutation.h"
 
 struct InteriorNode;
 
@@ -165,12 +63,6 @@ struct KeySuffix{
   }
 };
 
-// こっちは単なる64bit数として捉えた方が良さそう
-struct Permutation{
-  uint64_t body;
-
-  // index等によるアクセスはmethodとして
-};
 
 enum ExtractResult: uint8_t {
   NOTFOUND,
