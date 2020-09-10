@@ -6,7 +6,7 @@
 #include <atomic>
 
 template <typename T>
-struct is_atomic{
+struct can_atomic{
   static constexpr bool value =
     std::is_trivially_copyable<T>::value
     && std::is_copy_constructible<T>::value
@@ -22,7 +22,7 @@ void verify_struct_property(){
   static_assert(sizeof(Permutation) == 8);
 
   // check atomic.
-  static_assert(is_atomic<Version>::value);
+  static_assert(can_atomic<Version>::value);
 
 }
 

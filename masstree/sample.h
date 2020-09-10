@@ -68,15 +68,13 @@ Masstree *sample3(){
   auto tree = new Masstree;
   auto l1_root = new BorderNode;
   auto l2_root = new BorderNode;
-
 // ↓
   tree->root = l1_root;
 
   l1_root->key_slice[0] = 0x0001020304050607;
   l1_root->key_len[0] = BorderNode::key_len_layer;
   l1_root->lv[0].next_layer = l2_root;
-  Version v1; v1.is_root = true;v1.is_border = true;
-  l1_root->version = v1;
+  l1_root->version.is_root = true;
 
   l2_root->key_slice[0] = 0x0A0B;
   l2_root->key_len[0] = 2;
@@ -84,8 +82,7 @@ Masstree *sample3(){
   l2_root->key_slice[1] = 0x0C0D;
   l2_root->key_len[1] = 2;
   l2_root->lv[1].value = new int(2);
-  Version v2; v2.is_root = true;v2.is_border = true;
-  l2_root->version = v2;
+  l2_root->version.is_root = true;
 
   return tree;
 }
@@ -110,8 +107,7 @@ Masstree *sample4(){
 
   tree->root = root;
 
-  Version v; v.is_root = true;
-  root->version = v;
+  root->version.is_root = true;
   root->n_keys = 15;
   root->key_slice[0] = 0x0100;
   root->key_slice[1] = 0x0200;
@@ -132,23 +128,16 @@ Masstree *sample4(){
   root->child[1] = _11;
   root->child[15] = _160;
 
-  Version v9; v9.is_border = true;
-  _9->version = v9;
   _9->key_len[0] = 1;
   _9->key_slice[0] = 0x09;
   _9->lv[0].value = new int(18);
   _9->parent = root;
 
-
-  Version v11; v11.is_border = true;
-  _11->version = v11;
   _11->key_len[0] = 2;
   _11->key_slice[0] = 0x0101;
   _11->lv[0].value = new int(22);
   _11->parent = root;
 
-  Version v160; v160.is_border = true;
-  _160->version = v160;
   _160->key_len[0] = 3;
   _160->key_slice[0] = 0x010600;
   _160->lv[0].value = new int(320);
