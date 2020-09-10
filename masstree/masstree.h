@@ -274,4 +274,11 @@ void *get(Node *root, Key k){
 
 }
 
+/**
+ * 存在するkeyに対して、そのvalueを書き換える
+ */
+void write(Key key, int value){
+
+}
+
 #endif //TRANSACTIONSYSTEM_MASSTREE_H

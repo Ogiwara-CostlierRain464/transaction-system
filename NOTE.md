@@ -13,3 +13,6 @@ https://kazmax.zpp.jp/cmd/p/posix_memalign.3.html
 
 # Extended Asm
 https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html
+
+
+alignasとatomicの使い分けは？

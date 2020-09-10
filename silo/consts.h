@@ -2,6 +2,7 @@
 #define TRANSACTIONSYSTEM_CONSTS_H
 
 #include <vector>
+#include <cstdint>
 
 /**
  * 各種定数、共有変数をここにまとめる
