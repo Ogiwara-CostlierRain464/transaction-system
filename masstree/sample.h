@@ -106,6 +106,7 @@ Masstree *sample4(){
   auto root = new InteriorNode;
   auto _9 = new BorderNode;
   auto _11 = new BorderNode;
+  auto _160 = new BorderNode;
 
   tree->root = root;
 
@@ -129,6 +130,7 @@ Masstree *sample4(){
   root->key_slice[14] = 0x010500;
   root->child[0] = _9;
   root->child[1] = _11;
+  root->child[15] = _160;
 
   Version v9; v9.is_border = true;
   _9->version.store(v9);
@@ -144,6 +146,13 @@ Masstree *sample4(){
   _11->key_slice[0] = 0x0101;
   _11->lv[0].value = new int(22);
   _11->parent = root;
+
+  Version v160; v160.is_border = true;
+  _160->version.store(v160);
+  _160->key_len[0] = 3;
+  _160->key_slice[0] = 0x010600;
+  _160->lv[0].value = new int(320);
+  _160->parent = root;
 
   return tree;
 }
