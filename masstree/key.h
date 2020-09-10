@@ -49,8 +49,8 @@ struct Key{
   size_t size;
   size_t cursor = 0;
 
-  Key(std::vector<KeySlice> &body_ , size_t size_)
-    : body(std::move(body_)), size(size_)
+  Key(std::vector<KeySlice> body_ , size_t size_)
+    : body(body_), size(size_)
   {}
 
   bool hasNext() {

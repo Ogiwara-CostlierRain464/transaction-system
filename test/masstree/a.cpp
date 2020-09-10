@@ -142,3 +142,18 @@ TEST(MasstreeTest, start_new_tree){
   assert(p != nullptr);
   EXPECT_EQ(*reinterpret_cast<int *>(p), 100);
 }
+
+TEST(MasstreeTest, insert){
+  Key key1({
+    KeySlice(0x0102030405060708, 8),
+    KeySlice(0x0A0B, 2),
+  },2);
+  auto root = insert(nullptr, key1, new int(1));
+  Key key2({
+    KeySlice(0x1112131415161718, 8),
+  },1);
+  root = insert(root, key2, new int(2));
+  auto p = get(root, key1);
+  assert(p != nullptr);
+  EXPECT_EQ(*reinterpret_cast<int *>(p), 1);
+}

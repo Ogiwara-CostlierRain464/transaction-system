@@ -170,18 +170,19 @@ Node *split(Node *n, Key k){
  * rootが更新される場合があるので、rootへのポインタを返す
  */
 Node *insert(Node *root, Key key, void* value){
+
   /**
-   * Case 1: すでにKeyが存在している場合
-   */
-  if(write(root, key, value)){
-    return root;
+    * Case 1: Treeのrootが空の場合
+    */
+  if(root == nullptr){
+    return start_new_tree(key, value);
   }
 
   /**
-   * Case 2: Treeのrootが空の場合
+   * Case 2: すでにKeyが存在している場合
    */
-  if(root == nullptr){
-    return start_new_tree(key, value);
+  if(write(root, key, value)){
+    return root;
   }
 
   auto border_v = findBorder(root, key);
