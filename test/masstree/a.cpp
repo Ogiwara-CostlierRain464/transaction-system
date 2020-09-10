@@ -11,7 +11,7 @@ class MasstreeTest: public ::testing::Test{
   }
 };
 
-struct DummyNode: Node{
+struct DummyNode: public Node{
   int value;
 
   explicit DummyNode(int v)

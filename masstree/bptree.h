@@ -1,6 +1,7 @@
 #ifndef TRANSACTIONSYSTEM_BPTREE_H
 #define TRANSACTIONSYSTEM_BPTREE_H
 
+#include <cassert>
 #include "masstree.h"
 
 
@@ -36,11 +37,31 @@ Node *start_new_tree(Key key, void *value){
 next_layer:
   auto current = key.getCurrentSlice();
   if(1 <= current.size and current.size <= 7){
-
+    root->key_len[0] = current.size;
+    root->key_slice[0] = current.slice;
+    root->lv[0].value = value;
   }else{ // size == 8
-
+    assert(current.size == 8);
+    if(key.hasNext()){
+      root->key_slice[0] = current.slice;
+      key.next();
+      if(key.hasNext()){
+        root->key_len[0] = BorderNode::key_len_layer;
+        auto next = new BorderNode;
+        root->lv[0].next_layer = next;
+        root = next;
+        goto next_layer;
+      }else{
+        root->key_len[0] = key.getCurrentSlice().size;
+        root->key_suffixes.set(0, key.getCurrentSlice());
+        root->lv[0].value = value;
+      }
+    }else{
+      root->key_len[0] = 8;
+      root->key_slice[0] = current.slice;
+      root->lv[0].value = value;
+    }
   }
-
 }
 
 /**
