@@ -127,9 +127,15 @@ TEST(MasstreeTest, start_new_tree){
   vector<KeySlice> slices = {
     KeySlice(0x0102030405060708, 8),
     KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
+    KeySlice(0x0910111213141516, 8),
     KeySlice(0x171819, 3),
   };
-  Key key(slices, 3);
+  Key key(slices, 9);
   auto root = start_new_tree(key, new int(100));
 
   auto p = get(root, key);

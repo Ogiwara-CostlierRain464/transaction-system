@@ -51,9 +51,7 @@ struct Key{
 
   Key(std::vector<KeySlice> &body_ , size_t size_)
     : body(std::move(body_)), size(size_)
-  {
-    assert(1 <= size and size <= 8);
-  }
+  {}
 
   bool hasNext() {
     if (size == cursor + 1)
