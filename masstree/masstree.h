@@ -316,4 +316,6 @@ void write(Node* root, Key k, int* value){
   }
 }
 
+
+
 #endif //TRANSACTIONSYSTEM_MASSTREE_H

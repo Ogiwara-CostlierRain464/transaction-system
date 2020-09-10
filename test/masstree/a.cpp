@@ -109,3 +109,15 @@ TEST(MasstreeTest, get3){
   assert(p != nullptr);
   EXPECT_EQ(*reinterpret_cast<int *>(p), 320);
 }
+
+TEST(MasstreeTest, get4){
+  auto tree = sample4();
+  vector<KeySlice> slices = {KeySlice(0x0101, 2)};
+  Key key(slices, 1);
+
+  write(tree->root, key, new int(23));
+  auto p = get(tree->root, key);
+
+  assert(p != nullptr);
+  EXPECT_EQ(*reinterpret_cast<int *>(p), 23);
+}
