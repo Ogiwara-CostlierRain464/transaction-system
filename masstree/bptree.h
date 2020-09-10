@@ -34,6 +34,8 @@ Node *start_new_tree(Key key, void *value){
    *
    */
    auto root = new BorderNode;
+   root->version.is_root = true;
+   auto result = root;
 next_layer:
   auto current = key.getCurrentSlice();
   if(1 <= current.size and current.size <= 7){
@@ -48,11 +50,12 @@ next_layer:
       if(key.hasNext()){
         root->key_len[0] = BorderNode::key_len_layer;
         auto next = new BorderNode;
+        next->version.is_root = true;
         root->lv[0].next_layer = next;
         root = next;
         goto next_layer;
       }else{
-        root->key_len[0] = key.getCurrentSlice().size;
+        root->key_len[0] = 8;
         root->key_suffixes.set(0, key.getCurrentSlice());
         root->lv[0].value = value;
       }
@@ -62,6 +65,8 @@ next_layer:
       root->lv[0].value = value;
     }
   }
+
+  return result;
 }
 
 /**
@@ -80,7 +85,7 @@ Node *insert(Node *root, Key key, void* value){
    * Case 2: Treeのrootが空の場合
    */
   if(root == nullptr){
-
+    return start_new_tree(key, value);
   }
 
   /**
