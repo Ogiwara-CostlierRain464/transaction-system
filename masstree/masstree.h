@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <optional>
+#include <tuple>
 #include "version.h"
 #include "key.h"
 #include "permutation.h"
@@ -45,8 +46,8 @@ struct InteriorNode: Node{
 };
 
 union LinkOrValue{
-  Node *next_layer = nullptr;
-  void *value;
+  /*alignas*/ Node *next_layer = nullptr;
+  /*alignas*/ void *value;
 };
 
 /**
@@ -114,6 +115,17 @@ struct BorderNode: Node{
    * @return
    */
   std::pair<ExtractResult, LinkOrValue> extractLinkOrValueFor(Key key){
+    auto triple = extractLinkOrValueWithIndexFor(key);
+    return std::pair(std::get<0>(triple), std::get<1>(triple));
+  }
+
+  /**
+   * BorderNode内で、keyに該当するLinkOrValueを取得する
+   * また、見つけた位置のindexも返す
+   * @param key
+   * @return
+   */
+  std::tuple<ExtractResult, LinkOrValue, size_t> extractLinkOrValueWithIndexFor(Key key){
     /**
      * 現在のkey sliceの次のkey sliceがあるかどうかで場合わけ
      *
@@ -137,7 +149,7 @@ struct BorderNode: Node{
 
       for(size_t i = 0; i < 15; ++i){
         if(key_slice[i] == current.slice and key_len[i] == current.size){
-          return std::pair(VALUE, lv[i]);
+          return std::tuple(VALUE, lv[i], i);
         }
       }
     }else{ // next key sliceがある場合
@@ -147,23 +159,23 @@ struct BorderNode: Node{
           if(key_len[i] == 8){
             // suffixの中を見る
             if(key_suffixes[i].slice == key.next().slice){
-              return std::pair(VALUE, lv[i]);
+              return std::tuple(VALUE, lv[i], i);
             }else{
-              return std::pair(NOTFOUND, LinkOrValue{});
+              return std::tuple(NOTFOUND, LinkOrValue{}, 0);
             }
           }
 
           if(key_len[i] == BorderNode::key_len_layer){
-            return std::pair(LAYER, lv[i]);
+            return std::tuple(LAYER, lv[i], i);
           }
           if(key_len[i] == BorderNode::key_len_unstable){
-            return std::pair(UNSTABLE, LinkOrValue{});
+            return std::tuple(UNSTABLE, LinkOrValue{}, 0);
           }
         }
       }
     }
 
-    return std::pair(NOTFOUND, LinkOrValue{});
+    return std::tuple(NOTFOUND, LinkOrValue{}, 0);
   }
 };
 
@@ -268,14 +280,40 @@ void *get(Node *root, Key k){
   }else{ // t == UNSTABLE
     goto forward;
   }
-
 }
 
 /**
  * 存在するkeyに対して、そのvalueを書き換える
+ * writeする位置の探索までは、論文中のgetを参考にする。
  */
-void write(Key key, int value){
-
+void write(Node* root, Key k, int* value){
+  retry:
+  auto n_v = findBorder(root, k); auto n = n_v.first; auto v = n_v.second;
+  forward:
+  if(v.deleted)
+    goto retry;
+  auto t_lv_i = n->extractLinkOrValueWithIndexFor(k);
+  auto t = std::get<0>(t_lv_i);
+  auto lv = std::get<1>(t_lv_i);
+  auto index = std::get<2>(t_lv_i);
+  if((n->version ^ v) > Version::lock){
+    v = stableVersion(n); auto next = n->next;
+    while(!v.deleted and next != nullptr /**/){
+      n = next; v = stableVersion(n); next = n->next;
+    }
+    goto forward;
+  }else if(t == NOTFOUND){
+    return;
+  }else if(t == VALUE){
+    n->lv[index].value = value;
+  }else if(t == LAYER){
+    root = lv.next_layer;
+    // advance k to next slice
+    k.next();
+    goto retry;
+  }else{ // t == UNSTABLE
+    goto forward;
+  }
 }
 
 #endif //TRANSACTIONSYSTEM_MASSTREE_H
