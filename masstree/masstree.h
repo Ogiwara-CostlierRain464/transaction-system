@@ -181,6 +181,33 @@ struct BorderNode: Node{
 
     return std::tuple(NOTFOUND, LinkOrValue{}, 0);
   }
+
+  /*
+   * 新たにkey sliceを挿入する余裕があるかどうか
+   */
+  bool hasSpace() const{
+    // key_lenが0 ⇒ その要素は空、と仮定
+    // NOTE: key sliceの長さが0の場合があった場合は変更の必要
+    return key_len[14] == 0;
+  }
+
+  /**
+   * 有効なkeyの数
+   * @return
+   */
+  size_t numberOfKeys(){
+    // key_lenが0 ⇒ その要素は空、と仮定
+    // NOTE: key sliceの長さが0の場合があった場合は変更の必要
+    size_t result = 0;
+    for(size_t i = 0; i < 15; ++i){
+      if(key_len[i] > 0){
+        ++result;
+      }else{
+        break;
+      }
+    }
+    return result;
+  }
 };
 
 Version stableVersion(Node *n){

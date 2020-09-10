@@ -22,5 +22,7 @@ Interior node内のkey sliceがある
 まずは普通のB+ treeを作ることを目標に
 
 
+どこでmemory fenceが必要なのかも考える
+
 
 
