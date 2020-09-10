@@ -109,6 +109,10 @@ struct BorderNode: Node{
   BorderNode *prev = nullptr;
   KeySuffix key_suffixes = {};
 
+  explicit BorderNode(){
+    version.is_border = true;
+  }
+
   /**
    * BorderNode内で、keyに該当するLinkOrValueを取得する。
    * @param key

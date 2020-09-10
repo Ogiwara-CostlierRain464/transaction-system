@@ -37,7 +37,7 @@ next_layer:
   auto current = key.getCurrentSlice();
   if(1 <= current.size and current.size <= 7){
 
-  }else{
+  }else{ // size == 8
 
   }
 
