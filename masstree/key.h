@@ -18,6 +18,7 @@
  */
 struct KeySlice{
   uint64_t slice = 0;
+  /* 1~8 */
   uint8_t size = 0;
 
   KeySlice() = default;

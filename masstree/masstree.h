@@ -285,8 +285,11 @@ void *get(Node *root, Key k){
 /**
  * 存在するkeyに対して、そのvalueを書き換える
  * writeする位置の探索までは、論文中のgetを参考にする。
+ *
+ * keyが存在し、書き込みに成功した時にはtrueを、
+ * keyが存在しなかった時にはfalseを返す
  */
-void write(Node* root, Key k, int* value){
+bool write(Node* root, Key k, void* value){
   retry:
   auto n_v = findBorder(root, k); auto n = n_v.first; auto v = n_v.second;
   forward:
@@ -303,9 +306,10 @@ void write(Node* root, Key k, int* value){
     }
     goto forward;
   }else if(t == NOTFOUND){
-    return;
+    return false;
   }else if(t == VALUE){
     n->lv[index].value = value;
+    return true;
   }else if(t == LAYER){
     root = lv.next_layer;
     // advance k to next slice

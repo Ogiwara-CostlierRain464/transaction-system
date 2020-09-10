@@ -19,6 +19,8 @@ Interior node内のkey sliceがある
 
 場合によっては、GCC atomic builtinを型でラップして提供しよう
 
+まずは普通のB+ treeを作ることを目標に
+
 
 
 
