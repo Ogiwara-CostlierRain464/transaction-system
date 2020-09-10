@@ -27,6 +27,7 @@ struct Node{
 };
 
 struct InteriorNode: Node{
+  /* 0~15 */
   uint8_t n_keys = 0;
   uint64_t key_slice[15] = {};
   Node *child[16] = {};
@@ -39,6 +40,10 @@ struct InteriorNode: Node{
       if(key.slice <= key_slice[i]){
         return child[i];
       }
+    }
+
+    if(n_keys == 15 && key.slice > key_slice[14]){
+      return child[15];
     }
 
     return nullptr;
@@ -56,9 +61,10 @@ union LinkOrValue{
  *
  */
 struct KeySuffix{
+  // NOTE: 性能改善の余地
   std::array<KeySlice, 15> body;
 
-  KeySuffix(){}
+  KeySuffix()= default;
 
   KeySlice operator[](size_t i){
     return body[i];
@@ -182,7 +188,7 @@ void lock(Node *n){
     Version desired = expected;
     desired.locked = true;
 
-    if(n->version.compare_exchange_weak(expected, desired)){
+    if(n->version.compare_exchange_weak(expected, desired, memory_order_acq_rel)){
       break;
     }
   }
@@ -246,7 +252,6 @@ void *get(Node *root, Key k){
   forward:
   if(v.deleted)
     goto retry;
-
   auto t_lv = n->extractLinkOrValueFor(k); auto t = t_lv.first; auto lv = t_lv.second;
   if((n->version.load(memory_order_acquire) ^ v) > Version::lock){
     v = stableVersion(n); auto next = n->next;
@@ -262,7 +267,6 @@ void *get(Node *root, Key k){
     root = lv.next_layer;
     // advance k to next slice
     k.next();
-
     goto retry;
   }else{ // t == UNSTABLE
     goto forward;
