@@ -18,7 +18,7 @@ KVSilo::Transaction::Value KVSilo::Transaction::read(Key key) {
   TidWord after;
   for(;;){
     do{
-      before = r->tidWord.load(std::memory_order_relaxed);
+      before = r->tidWord.load(std::memory_order_release);
     }while(before.lock);
 
     assert(before.latest);
@@ -27,7 +27,7 @@ KVSilo::Transaction::Value KVSilo::Transaction::read(Key key) {
 
     std::atomic_thread_fence(std::memory_order_acq_rel);
 
-    after = r->tidWord.load(std::memory_order_relaxed);
+    after = r->tidWord.load(std::memory_order_acquire);
 
     if(before == after){
       break;
@@ -51,14 +51,14 @@ void KVSilo::Transaction::commit() {
   lockWSet();
 
   std::atomic_thread_fence(std::memory_order_acquire);
-  Epoch e = env->E.load(std::memory_order_relaxed);
+  Epoch e = env->E.load(std::memory_order_acquire);
   std::atomic_thread_fence(std::memory_order_release);
 
   for(auto &read: RSet){
     Record *record = read.first;
     TidWord read_tid = read.second;
 
-    TidWord record_tid = record->tidWord.load(std::memory_order_relaxed);
+    TidWord record_tid = record->tidWord.load(std::memory_order_acquire);
     if(read_tid.tid != record_tid.tid
     || !record_tid.latest
     || (record_tid.lock && !searchWSet(record))
@@ -88,9 +88,9 @@ void KVSilo::Transaction::commit() {
   mostRecentlyChosenTid = maxTid;
 
   for(auto &w: WSet){
-    w.first->value.store(w.second, std::memory_order_relaxed);
+    w.first->value.store(w.second, std::memory_order_release);
     std::atomic_thread_fence(std::memory_order_acq_rel);
-    w.first->tidWord.store(maxTid, std::memory_order_relaxed);
+    w.first->tidWord.store(maxTid, std::memory_order_release);
   }
 
   WSet.clear();

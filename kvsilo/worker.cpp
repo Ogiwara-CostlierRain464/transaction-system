@@ -16,16 +16,16 @@ KVSilo::Worker::Worker(
 
 
 void KVSilo::Worker::run() {
-  while(!env->start.load(std::memory_order_relaxed)){
+  while(!env->start.load(std::memory_order_acquire)){
     _mm_pause();
   }
 
-  while(!env->stop.load(std::memory_order_relaxed)){
+  while(!env->stop.load(std::memory_order_acquire)){
     Query query;
 
     // 新しいQueryが来るまでまつ
     while(!waitingQueries.try_dequeue(query)){
-      if(env->stop.load(std::memory_order_relaxed)){
+      if(env->stop.load(std::memory_order_acquire)){
         return;
       }
 
@@ -34,8 +34,8 @@ void KVSilo::Worker::run() {
 
     // ewを更新
     env->workerE[workerId]->store(
-      env->E.load(std::memory_order_relaxed),
-      std::memory_order_relaxed
+      env->E.load(std::memory_order_acquire),
+      std::memory_order_release
     );
 
     // ここでqueryを実行することにより、Worker上で行うのと同じ意味になる

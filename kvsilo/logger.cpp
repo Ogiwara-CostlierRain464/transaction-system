@@ -8,11 +8,11 @@ KVSilo::Logger::Logger(SiloEnv &env_)
 }
 
 void KVSilo::Logger::run() {
-  while(!env.start.load(std::memory_order_relaxed)){
+  while(!env.start.load(std::memory_order_acquire)){
     _mm_pause();
   }
 
-  while(!env.stop.load(std::memory_order_relaxed)){
+  while(!env.stop.load(std::memory_order_acquire)){
     _mm_pause();
   }
 }

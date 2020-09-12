@@ -32,7 +32,7 @@ KVSilo::Database::Database()
     });
   }
 
-  env.start.store(true, std::memory_order_relaxed);
+  env.start.store(true, std::memory_order_release);
 }
 
 void KVSilo::Database::executeTransaction(const Query &query) {
@@ -48,7 +48,7 @@ void KVSilo::Database::executeTransaction(const Query &query) {
 void KVSilo::Database::leaderWork() {
   auto start = std::chrono::high_resolution_clock::now();
 
-  while(!env.stop.load(std::memory_order_relaxed)){
+  while(!env.stop.load(std::memory_order_acquire)){
     std::this_thread::sleep_for(1ms);
 
     auto check = std::chrono::high_resolution_clock::now();
@@ -58,10 +58,10 @@ void KVSilo::Database::leaderWork() {
     if(ms < 40)
       continue;
 
-    Epoch E = env.E.load(std::memory_order_relaxed);
+    Epoch E = env.E.load(std::memory_order_release);
 
     for(auto &ew: env.workerE){
-      if(ew->load(std::memory_order_relaxed) != E){
+      if(ew->load(std::memory_order_acquire) != E){
         continue;
       }
     }
@@ -74,7 +74,7 @@ void KVSilo::Database::leaderWork() {
 
 
 void KVSilo::Database::terminate() {
-  env.stop.store(true, std::memory_order_relaxed);
+  env.stop.store(true, std::memory_order_release);
 
   leaderThread.join();
 

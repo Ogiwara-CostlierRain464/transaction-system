@@ -95,7 +95,7 @@ void KVSilo::PrimaryTree::findAndPrint(Key key) {
     printf("Record not found under key %zu.\n", key);
   }else{
     printf("Record at %p -- key %zu, value %d.\n",
-      r, key, r->value.load(std::memory_order_relaxed));
+      r, key, r->value.load(std::memory_order_acquire));
   }
 }
 
@@ -112,7 +112,7 @@ void KVSilo::PrimaryTree::findAndPrintRange(Key key_start, Key key_end) {
       printf("Key: %zu Location: %p Value: %d\n",
         out_keys[i],
         out_pointers[i],
-        static_cast<Record*>(out_pointers[i])->value.load(std::memory_order_relaxed)
+        static_cast<Record*>(out_pointers[i])->value.load(std::memory_order_acquire)
         );
     }
   }

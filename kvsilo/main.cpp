@@ -21,7 +21,8 @@ int main(){
 
   std::this_thread::sleep_for(100ms);
 
-  constexpr size_t num_threads = 30000;
+  // 偶数である必要がある事に注意
+  constexpr size_t num_threads = 4082;
   std::vector<std::thread> threads;
   threads.reserve(num_threads);
   for(size_t i = 0; i < num_threads; ++i){
@@ -33,7 +34,7 @@ int main(){
           int value2 = trn.read(6);
           trn.write(6, value2 + 1);
         });
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(200ms);
       });
     }else{
       threads.emplace_back([&db](){
@@ -43,7 +44,7 @@ int main(){
           int value2 = trn.read(5);
           trn.write(5, value2 + 1);
         });
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(200ms);
 
       });
     }
