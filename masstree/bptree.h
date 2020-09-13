@@ -4,11 +4,22 @@
 #include <cassert>
 #include "masstree.h"
 
-
-Node *start_new_tree(Key key, void *value){
+/**
+ * KeyのBorderNodeへのinsert時に、keyの長さによっては
+ * new layerを作る必要がある。
+ *
+ * BorderNodeにkeyのsliceをとりあえず入れ、new layerを
+ * 作る必要がある場合には、new layerのrootとなるBorderNode
+ * を作り、このprocedureを呼び出す。
+ *
+ */
+void keyInsertAfterNewLayer(BorderNode *root, Key k, void *value){
+  // Rootとなるborderを渡す必要
+  assert(root->version.is_root);
+  // hasNextでないなら、新しいlayerを作る必要はない。
+  assert(k.hasNext());
   /**
    * keyの長さの分だけ、layerを作る
-   * ここの処理は、独立しそう
    *
    * key.get currentする
    *
@@ -32,16 +43,48 @@ Node *start_new_tree(Key key, void *value){
    * key_lenに8を入れてkey_sliceに入れて、lv.valueに入れる
    *
    */
-   auto root = new BorderNode;
-   root->version.is_root = true;
-   auto result = root;
 next_layer:
+  auto current = k.getCurrentSlice();
+  if(1 <= current.size and current.size <= 7){
+    root->key_len[0] = current.size;
+    root->key_slice[0] = current.slice;
+    root->lv[0].value = value;
+  }else{
+    assert(current.size == 8);
+    if(k.hasNext()){
+      root->key_slice[0] = current.slice;
+      k.next();
+      if(k.hasNext()){
+        root->key_len[0] = BorderNode::key_len_layer;
+        auto next = new BorderNode;
+        next->version.is_root = true;
+        root->lv[0].next_layer = next;
+        root = next;
+        goto next_layer;
+      }else{
+        root->key_len[0] = 8;
+        root->key_suffixes.set(0, k.getCurrentSlice());
+        root->lv[0].value = value;
+      }
+    }else{
+      root->key_len[0] = 8;
+      root->key_slice[0] = current.slice;
+      root->lv[0].value = value;
+    }
+  }
+}
+
+Node *start_new_tree(Key key, void *value){
+  auto root = new BorderNode;
+  root->version.is_root = true;
+  auto result = root;
+
   auto current = key.getCurrentSlice();
   if(1 <= current.size and current.size <= 7){
     root->key_len[0] = current.size;
     root->key_slice[0] = current.slice;
     root->lv[0].value = value;
-  }else{ // size == 8
+  }else{
     assert(current.size == 8);
     if(key.hasNext()){
       root->key_slice[0] = current.slice;
@@ -51,8 +94,7 @@ next_layer:
         auto next = new BorderNode;
         next->version.is_root = true;
         root->lv[0].next_layer = next;
-        root = next;
-        goto next_layer;
+        keyInsertAfterNewLayer(next, key, value);
       }else{
         root->key_len[0] = 8;
         root->key_suffixes.set(0, key.getCurrentSlice());
@@ -100,73 +142,129 @@ void insert_into_border(BorderNode *border, Key key, void *value){
     border->key_len[insertion_point] = current.size;
     border->key_slice[insertion_point] = current.slice;
     border->lv[insertion_point].value = value;
-    return;
   }else{
     assert(current.size == 8);
     if(key.hasNext()){
       border->key_slice[insertion_point] = current.slice;
-      key.hasNext();
+      key.next();
       if(key.hasNext()){
         border->key_len[insertion_point] = BorderNode::key_len_layer;
         auto next = new BorderNode;
         next->version.is_root = true;
         border->lv[insertion_point].next_layer = next;
-        border = next;
-        goto next_layer;
+        keyInsertAfterNewLayer(next, key, value);
       }else{
         border->key_len[insertion_point] = 8;
         border->key_suffixes.set(insertion_point, key.getCurrentSlice());
         border->lv[insertion_point].value = value;
-        return;
       }
     }else{
       border->key_len[insertion_point] = 8;
       border->key_slice[insertion_point] = current.slice;
       border->lv[insertion_point].value = value;
-      return;
-    }
-  }
-
-next_layer:
-  current = key.getCurrentSlice();
-  if(1 <= current.size and current.size <= 7){
-    border->key_len[0] = current.size;
-    border->key_slice[0] = current.slice;
-    border->lv[0].value = value;
-  }else{ // size == 8
-    assert(current.size == 8);
-    if(key.hasNext()){
-      border->key_slice[0] = current.slice;
-      key.next();
-      if(key.hasNext()){
-        border->key_len[0] = BorderNode::key_len_layer;
-        auto next = new BorderNode;
-        next->version.is_root = true;
-        border->lv[0].next_layer = next;
-        border = next;
-        goto next_layer;
-      }else{
-        border->key_len[0] = 8;
-        border->key_suffixes.set(0, key.getCurrentSlice());
-        border->lv[0].value = value;
-      }
-    }else{
-      border->key_len[0] = 8;
-      border->key_slice[0] = current.slice;
-      border->lv[0].value = value;
     }
   }
 }
 
-void split_keys_among(BorderNode *n, BorderNode *n1, Key &k){
+/**
+ * Finds the appropriate place to
+ * split a node that is too big into two.
+ * @return
+ */
+size_t cut(size_t len){
+  if(len % 2 == 0)
+    return len/2;
+  else
+    return len/2+1;
+}
+
+void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
   uint8_t temp_key_len[Node::ORDER + 1];
   uint64_t temp_key_slice[Node::ORDER + 1];
   LinkOrValue temp_lv[Node::ORDER + 1];
+  KeySlice temp_suffix[Node::ORDER + 1];
 
   size_t insertion_index = 0;
+  while (insertion_index < Node::ORDER - 1
+  && n->key_slice[insertion_index] < k.getCurrentSlice().slice){
+    ++insertion_index;
+  }
+
+  // 16個分、tempにコピー
+  for(size_t i, j = 0; i < n->numberOfKeys(); ++i, ++j){
+    if(j == insertion_index) ++j;
+    temp_key_len[j] = n->key_len[i];
+    temp_key_slice[j] = n->key_slice[i];
+    temp_lv[j] = n->lv[i];
+    temp_suffix[j] = n->key_suffixes.get(i);
+  }
+
+  // さて、ここでもnew layerへのリンクの貼り直し
+  // keyの幅が尽きるまで
+  auto current = k.getCurrentSlice();
+  if(1 <= current.size and current.size <= 7){
+    temp_key_len[insertion_index] = current.size;
+    temp_key_slice[insertion_index] = current.slice;
+    temp_lv[insertion_index].value = value;
+  }else{
+    assert(current.size == 8);
+    if(k.hasNext()){
+      temp_key_slice[insertion_index] = current.slice;
+      k.next();
+      if(k.hasNext()){
+        temp_key_len[insertion_index] = BorderNode::key_len_layer;
+        auto next = new BorderNode;
+        next->version.is_root = true;
+        temp_lv[insertion_index].next_layer = next;
+        keyInsertAfterNewLayer(next, k, value);
+      }else{
+        temp_key_len[insertion_index] = 8;
+        temp_suffix[insertion_index] = k.getCurrentSlice();
+        temp_lv[insertion_index].value = value;
+      }
+    }else{
+      temp_key_len[insertion_index] = 8;
+      temp_key_slice[insertion_index] = current.slice;
+      temp_lv[insertion_index].value = value;
+    }
+  }
+
+  // clear both nodes.
+  std::fill(n->key_len, n->key_len + Node::ORDER, 0);
+  std::fill(n->key_slice, n->key_slice + Node::ORDER, 0);
+  std::fill(n->lv, n->lv + Node::ORDER, LinkOrValue{});
+  n->key_suffixes.reset();
+
+  std::fill(n1->key_len, n1->key_len + Node::ORDER, 0);
+  std::fill(n1->key_slice, n1->key_slice + Node::ORDER, 0);
+  std::fill(n1->lv, n1->lv + Node::ORDER, LinkOrValue{});
+  n1->key_suffixes.reset();
+
+  size_t split = cut(Node::ORDER);
+
+  for(size_t i = 0; i < split; ++i){
+    n->key_len[i] = temp_key_len[i];
+    n->key_slice[i] = temp_key_slice[i];
+    n->lv[i] = temp_lv[i];
+    n->key_suffixes.set(i, temp_suffix[i]);
+  }
+
+  for(size_t i = split, j = 0; i < Node::ORDER; ++i, ++j){
+    n1->key_len[j] = temp_key_len[i];
+    n1->key_slice[j] = temp_key_slice[i];
+    n1->lv[j] = temp_lv[i];
+    n1->key_suffixes.set(j, temp_suffix[i]);
+  }
+
+  n1->next = n->next;
+  n->next = n1;
+  n1->prev = n;
+
+  n1->parent = n->parent;
+
 }
 
-Node *split(Node *n, Key k){
+Node *split(Node *n, Key k, void *value){
   // precondition: n locked.
   assert(n->version.locked);
   Node *n1 = new BorderNode;
@@ -199,6 +297,8 @@ ascend:
     /* split keys among p and p1, inserting n1 */
     unlock(n1); n = p; n1 = p1; goto ascend;
   }
+
+  return nullptr;
 }
 
 /**
@@ -236,7 +336,7 @@ Node *insert(Node *root, Key key, void* value){
    * Case 4: border nodeに空きが無い場合
    */
   lock(border);
-  return split(border, key);
+  return split(border, key, value);
 }
 
 #endif //TRANSACTIONSYSTEM_BPTREE_H

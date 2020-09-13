@@ -632,6 +632,7 @@ node * insert_into_leaf_after_splitting(node * root, node * leaf, int key, recor
   free(temp_pointers);
   free(temp_keys);
 
+  // nextの引き継ぎ
   new_leaf->pointers[order - 1] = leaf->pointers[order - 1];
   leaf->pointers[order - 1] = new_leaf;
 
@@ -640,6 +641,7 @@ node * insert_into_leaf_after_splitting(node * root, node * leaf, int key, recor
   for (i = new_leaf->num_keys; i < order - 1; i++)
     new_leaf->pointers[i] = NULL;
 
+  // 親の受け継ぎ
   new_leaf->parent = leaf->parent;
   new_key = new_leaf->keys[0];
 

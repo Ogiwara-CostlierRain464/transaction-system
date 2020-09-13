@@ -71,8 +71,19 @@ struct KeySuffix{
     return body[i];
   }
 
+  KeySlice get(size_t i){
+    return body[i];
+  }
+
   void set(size_t i, KeySlice slice){
     body[i] = slice;
+  }
+
+  /**
+   * bodyをリセットする
+   */
+  void reset(){
+    std::fill(body.begin(), body.end() + Node::ORDER, KeySlice());
   }
 };
 
