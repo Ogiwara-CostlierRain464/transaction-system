@@ -329,15 +329,15 @@ InteriorNode *create_root_with_children(Node *left, KeySlice slice, Node *right)
 void insert_into_parent(InteriorNode *p, Node *n1, KeySlice slice){
   size_t insertion_index = 0;
 
-  while(insertion_index <= p->n_keys &&
+  while(insertion_index < p->n_keys &&
   p->key_slice[insertion_index] < slice.slice){
     ++insertion_index;
   }
 
   // move to right
   for(size_t i = p->n_keys; i > insertion_index; --i){
-    p->key_slice[i + 1] = p->key_slice[i];
     p->child[i + 1] = p->child[i];
+    p->key_slice[i] = p->key_slice[i - 1];
   }
   p->child[insertion_index + 1] = n1;
   p->key_slice[insertion_index] = slice.slice;

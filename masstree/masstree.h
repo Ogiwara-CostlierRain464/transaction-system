@@ -40,11 +40,7 @@ struct InteriorNode: Node{
       }
     }
 
-    if(n_keys == ORDER - 1 && key.slice > key_slice[ORDER - 2]){
-      return child[ORDER - 1];
-    }
-
-    return nullptr;
+    return child[n_keys];
   }
 
   bool isNotFull(){

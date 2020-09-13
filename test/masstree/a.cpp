@@ -178,14 +178,18 @@ InteriorNode *to_i(Node *n){
 
 TEST(MasstreeTest, split){
   Node *root = nullptr;
-  for(uint64_t i = 1; i <= 16; ++i){
+  for(uint64_t i = 1; i <= 24; ++i){
     Key *k = new Key(KeySlice(i, 1));
     root = insert(root, *k, new int(i));
   }
 
   print_sub_tree(root);
 
-  auto p = get(root, Key(KeySlice(6, 1)));
+  // B+ tree自体の見直しが必要
+  // keyより左に来るのは、どんな値なのか？など
+  // それ以外は大体完了
+
+  auto p = get(root, Key(KeySlice(17, 1)));
   assert(p != nullptr);
-  EXPECT_EQ(*reinterpret_cast<int *>(p),6);
+  EXPECT_EQ(*reinterpret_cast<int *>(p),17);
 }
