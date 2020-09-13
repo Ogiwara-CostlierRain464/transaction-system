@@ -17,6 +17,8 @@
 struct InteriorNode;
 
 struct Node{
+  static constexpr size_t ORDER = 15;
+
   /*alignas(?)*/ Version version = {};
   InteriorNode *parent = nullptr;
 };
@@ -24,8 +26,8 @@ struct Node{
 struct InteriorNode: Node{
   /* 0~15 */
   uint8_t n_keys = 0;
-  uint64_t key_slice[15] = {};
-  Node *child[16] = {};
+  uint64_t key_slice[ORDER] = {};
+  Node *child[ORDER + 1] = {};
 
   Node* findChild(KeySlice key){
     /**
@@ -37,11 +39,15 @@ struct InteriorNode: Node{
       }
     }
 
-    if(n_keys == 15 && key.slice > key_slice[14]){
-      return child[15];
+    if(n_keys == ORDER && key.slice > key_slice[ORDER - 1]){
+      return child[ORDER];
     }
 
     return nullptr;
+  }
+
+  bool isNotFull(){
+    return n_keys != ORDER;
   }
 };
 
@@ -57,7 +63,7 @@ union LinkOrValue{
  */
 struct KeySuffix{
   // NOTE: 性能改善の余地
-  std::array<KeySlice, 15> body;
+  std::array<KeySlice, Node::ORDER> body;
 
   KeySuffix()= default;
 
@@ -101,10 +107,10 @@ struct BorderNode: Node{
    *
    * NOTE: どんな時にslice長が0byteになるか考察する
    */
-  uint8_t key_len[15] = {};
+  uint8_t key_len[ORDER] = {};
   Permutation permutation = {};
-  uint64_t key_slice[15] = {};
-  LinkOrValue lv[15] = {};
+  uint64_t key_slice[ORDER] = {};
+  LinkOrValue lv[ORDER] = {};
   BorderNode *next = nullptr;
   BorderNode *prev = nullptr;
   KeySuffix key_suffixes = {};
@@ -151,13 +157,13 @@ struct BorderNode: Node{
 
     if(!key.hasNext()){ // next key sliceがない場合
 
-      for(size_t i = 0; i < 15; ++i){
+      for(size_t i = 0; i < ORDER; ++i){
         if(key_slice[i] == current.slice and key_len[i] == current.size){
           return std::tuple(VALUE, lv[i], i);
         }
       }
     }else{ // next key sliceがある場合
-      for(size_t i = 0; i < 15; ++i){
+      for(size_t i = 0; i < ORDER; ++i){
 
         if(key_slice[i] == current.slice){
           if(key_len[i] == 8){
@@ -188,7 +194,7 @@ struct BorderNode: Node{
   bool hasSpace() const{
     // key_lenが0 ⇒ その要素は空、と仮定
     // NOTE: key sliceの長さが0の場合があった場合は変更の必要
-    return key_len[14] == 0;
+    return key_len[ORDER - 1] == 0;
   }
 
   /**
@@ -199,7 +205,7 @@ struct BorderNode: Node{
     // key_lenが0 ⇒ その要素は空、と仮定
     // NOTE: key sliceの長さが0の場合があった場合は変更の必要
     size_t result = 0;
-    for(size_t i = 0; i < 15; ++i){
+    for(size_t i = 0; i < ORDER; ++i){
       if(key_len[i] > 0){
         ++result;
       }else{

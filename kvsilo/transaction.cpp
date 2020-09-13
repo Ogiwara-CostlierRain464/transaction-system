@@ -71,7 +71,6 @@ void KVSilo::Transaction::commit(Result &result) {
     maxReadTid = std::max(maxReadTid, record_tid);
   }
 
-
   // Phase 3
   TidWord tidA, tidB, tidC;
 

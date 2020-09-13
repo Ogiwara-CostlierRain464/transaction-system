@@ -3,7 +3,7 @@
 
 #include "masstree.h"
 /**
- * まずは、手動でデータを用意する
+ * 手動でデータを用意する
  */
 
 Masstree *sample1(){

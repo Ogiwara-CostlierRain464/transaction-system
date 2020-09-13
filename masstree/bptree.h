@@ -158,11 +158,47 @@ next_layer:
   }
 }
 
-Node *split(Node *n, Key k){
-  assert(false && "NOT YET IMPLEMENTED");
+void split_keys_among(BorderNode *n, BorderNode *n1, Key &k){
+  uint8_t temp_key_len[Node::ORDER + 1];
+  uint64_t temp_key_slice[Node::ORDER + 1];
+  LinkOrValue temp_lv[Node::ORDER + 1];
 
+  size_t insertion_index = 0;
+}
+
+Node *split(Node *n, Key k){
   // precondition: n locked.
   assert(n->version.locked);
+  Node *n1 = new BorderNode;
+  n->version.splitting = true;
+  // n1 is initially locked
+  n1->version = n->version;
+  /* split keys among n and n1, inserting k
+   *
+   * */
+ascend:
+  InteriorNode *p = lockedParent(n);
+  if(p == nullptr){
+    /* create a new interior node p with children n, n1 */
+    unlock(n);
+    /* fence required here */
+    unlock(n1);
+    /* may return p as new root. */
+  }else if(p->isNotFull()){
+    p->version.inserting = true;
+    /* insert n1 into p */
+    unlock(n);
+    /* fence required here */
+    unlock(n1);
+    unlock(p);
+  }else{
+    p->version.splitting = true;
+    unlock(n);
+    Node *p1 = new InteriorNode;
+    p1->version = p->version;
+    /* split keys among p and p1, inserting n1 */
+    unlock(n1); n = p; n1 = p1; goto ascend;
+  }
 }
 
 /**
@@ -191,14 +227,15 @@ Node *insert(Node *root, Key key, void* value){
   /**
    * Case 3: border nodeに空きがある場合
    */
-   if(border->hasSpace()){
-     insert_into_border(border, key, value);
-     return root;
-   }
+  if(border->hasSpace()){
+    insert_into_border(border, key, value);
+    return root;
+  }
 
   /**
    * Case 4: border nodeに空きが無い場合
    */
+  lock(border);
   return split(border, key);
 }
 
