@@ -37,6 +37,7 @@ private:
   TidWord mostRecentlyChosenTid;
 
   void lockWSet();
+  void unlockWSet();
   Record *searchWSet(Record *ptr);
 };
 

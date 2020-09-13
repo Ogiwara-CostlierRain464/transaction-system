@@ -21,33 +21,37 @@ int main(){
 
   std::this_thread::sleep_for(100ms);
 
-  // 偶数である必要がある事に注意
-  constexpr size_t num_threads = 4082;
+  // 物理thread数だけクライアントを立ち上げる
+
+  auto num = std::thread::hardware_concurrency();
   std::vector<std::thread> threads;
-  threads.reserve(num_threads);
-  for(size_t i = 0; i < num_threads; ++i){
-    if(i % 2 == 0){
-      threads.emplace_back([&db](){
+  threads.reserve(num);
+
+  for(size_t i = 0; i < num / 2; ++i){
+    threads.emplace_back([&db](){
+      for(size_t j = 0; j < 10; ++j){
         db.executeTransaction([](Transaction& trn){
           int value = trn.read(5);
           trn.write(5, value - 1);
           int value2 = trn.read(6);
           trn.write(6, value2 + 1);
         });
-        std::this_thread::sleep_for(200ms);
-      });
-    }else{
-      threads.emplace_back([&db](){
+      }
+      std::this_thread::sleep_for(200ms);
+    });
+  }
+  for(size_t i = num / 2; i < num; ++i){
+    threads.emplace_back([&db](){
+      for(size_t j = 0; j < 10; ++j){
         db.executeTransaction([](Transaction& trn){
           int value = trn.read(6);
           trn.write(6, value - 1);
           int value2 = trn.read(5);
           trn.write(5, value2 + 1);
         });
-        std::this_thread::sleep_for(200ms);
-
-      });
-    }
+      }
+      std::this_thread::sleep_for(200ms);
+    });
   }
 
   for(auto &t: threads){

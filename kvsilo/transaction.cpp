@@ -64,6 +64,7 @@ void KVSilo::Transaction::commit() {
     || (record_tid.lock && !searchWSet(record))
     ){
       printf("ABORT.\n");
+      unlockWSet();
       return;
     }
 
@@ -119,6 +120,18 @@ void KVSilo::Transaction::lockWSet() {
     maxWriteTid = std::max(maxWriteTid, expected);
   }
 }
+
+void KVSilo::Transaction::unlockWSet() {
+  TidWord expected, desired;
+
+  for(auto &w_elem: WSet){
+    expected.body = w_elem.first->tidWord.load(std::memory_order_acquire).body;
+    desired = expected;
+    desired.lock = false;
+    w_elem.first->tidWord.store(desired, std::memory_order_release);
+  }
+}
+
 
 KVSilo::Record *KVSilo::Transaction::searchWSet(Record *ptr) {
   // liner search
