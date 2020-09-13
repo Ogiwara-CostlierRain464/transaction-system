@@ -200,8 +200,10 @@ void split_keys_among(InteriorNode *p, InteriorNode *p1, KeySlice slice, Node *n
   temp_child[insertion_index + 1] = n1;
   temp_key_slice[insertion_index] = slice.slice;
 
-  std::fill(p->key_slice, p->key_slice + Node::ORDER + 1, 0);
-  std::fill(p->child, p->child + Node::ORDER, nullptr);
+  // clean
+  // 実は、InteriorNodeの場合はn_keysを0にするだけで十分
+  //std::fill(p->key_slice, p->key_slice + Node::ORDER + 1, 0);
+  //std::fill(p->child, p->child + Node::ORDER, nullptr);
   p->n_keys = 0;
 
   size_t split = cut(Node::ORDER);
