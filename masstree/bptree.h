@@ -188,11 +188,11 @@ void split_keys_among(InteriorNode *p, InteriorNode *p1, KeySlice slice, Node *n
     ++insertion_index;
   }
 
-  for(size_t i, j = 0; i < p->n_keys + 1; ++i, ++j){
+  for(size_t i = 0, j = 0; i < p->n_keys + 1; ++i, ++j){
     if(j == insertion_index + 1) ++j;
     temp_child[j] = p->child[i];
   }
-  for(size_t i, j = 0; i < p->n_keys; ++i, ++j){
+  for(size_t i = 0, j = 0; i < p->n_keys; ++i, ++j){
     if(j == insertion_index) ++j;
     temp_key_slice[j] = p->key_slice[i];
   }
@@ -228,11 +228,11 @@ void split_keys_among(InteriorNode *p, InteriorNode *p1, KeySlice slice, Node *n
   }
 }
 
-void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
-  uint8_t temp_key_len[Node::ORDER];
-  uint64_t temp_key_slice[Node::ORDER];
-  LinkOrValue temp_lv[Node::ORDER];
-  KeySlice temp_suffix[Node::ORDER];
+void split_keys_among(BorderNode *n, BorderNode *n1, Key k, void *value){
+  uint8_t temp_key_len[Node::ORDER] = {};
+  uint64_t temp_key_slice[Node::ORDER] = {};
+  LinkOrValue temp_lv[Node::ORDER] = {};
+  KeySlice temp_suffix[Node::ORDER] = {};
 
   size_t insertion_index = 0;
   while (insertion_index < Node::ORDER - 1
@@ -241,7 +241,7 @@ void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
   }
 
   // 16個分、tempにコピー
-  for(size_t i, j = 0; i < n->numberOfKeys(); ++i, ++j){
+  for(size_t i = 0, j = 0; i < n->numberOfKeys(); ++i, ++j){
     if(j == insertion_index) ++j;
     temp_key_len[j] = n->key_len[i];
     temp_key_slice[j] = n->key_slice[i];
@@ -355,6 +355,7 @@ Node *split(Node *n, Key k, void *value){
   // precondition: n locked.
   assert(n->version.locked);
   Node *n1 = new BorderNode;
+  n->version.is_root = false;
   n->version.splitting = true;
   // n1 is initially locked
   n1->version = n->version;
@@ -381,7 +382,9 @@ ascend:
     return nullptr;
   }else{
     p->version.splitting = true;
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     unlock(n);
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     Node *p1 = new InteriorNode;
     p1->version = p->version;
     split_keys_among(
@@ -428,6 +431,16 @@ Node *insert(Node *root, Key key, void* value){
   lock(border);
   auto new_root = split(border, key, value);
   return new_root ? new_root : root;
+}
+
+void print_sub_tree(Node *root){
+  if(root->version.is_border){
+    auto border = reinterpret_cast<BorderNode *>(root);
+    border->printNode();
+  }else{
+    auto interior = reinterpret_cast<InteriorNode *>(root);
+    interior->printNode();
+  }
 }
 
 #endif //TRANSACTIONSYSTEM_BPTREE_H

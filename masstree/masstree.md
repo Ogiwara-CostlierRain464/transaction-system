@@ -25,4 +25,5 @@ Interior node内のkey sliceがある
 どこでmemory fenceが必要なのかも考える
 
 
-
+まず、version内の情報 is_rootとか
+を更新し忘れている。

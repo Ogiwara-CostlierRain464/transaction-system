@@ -157,3 +157,35 @@ TEST(MasstreeTest, insert){
   assert(p != nullptr);
   EXPECT_EQ(*reinterpret_cast<int *>(p), 1);
 }
+
+void print_sub_tree2(Node *root){
+  if(root->version.is_border){
+    auto border = reinterpret_cast<BorderNode *>(root);
+    border->printNode();
+  }else{
+    auto interior = reinterpret_cast<InteriorNode *>(root);
+    interior->printNode();
+  }
+}
+
+BorderNode *to_b(Node *n){
+  return reinterpret_cast<BorderNode *>(n);
+}
+
+InteriorNode *to_i(Node *n){
+  return reinterpret_cast<InteriorNode *>(n);
+}
+
+TEST(MasstreeTest, split){
+  Node *root = nullptr;
+  for(uint64_t i = 1; i <= 16; ++i){
+    Key *k = new Key(KeySlice(i, 1));
+    root = insert(root, *k, new int(i));
+  }
+
+  print_sub_tree(root);
+
+  auto p = get(root, Key(KeySlice(4, 1)));
+  assert(p != nullptr);
+  EXPECT_EQ(*reinterpret_cast<int *>(p), 4);
+}

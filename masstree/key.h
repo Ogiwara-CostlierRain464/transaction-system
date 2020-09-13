@@ -49,6 +49,9 @@ struct Key{
   size_t size;
   size_t cursor = 0;
 
+  Key(KeySlice slice): Key({slice}, 1)
+  {}
+
   Key(std::vector<KeySlice> body_ , size_t size_)
     : body(body_), size(size_)
   {}

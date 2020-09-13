@@ -15,6 +15,7 @@
 #include "permutation.h"
 
 struct InteriorNode;
+struct BorderNode;
 
 struct Node{
   static constexpr size_t ORDER = 16;
@@ -48,6 +49,14 @@ struct InteriorNode: Node{
 
   bool isNotFull(){
     return n_keys != ORDER - 1;
+  }
+
+  void printNode(){
+    printf("/");
+    for(size_t i = 0; i < ORDER - 1; ++i){
+      printf("%llu/", key_slice[i]);
+    }
+    printf("\\\n");
   }
 };
 
@@ -225,6 +234,14 @@ struct BorderNode: Node{
     }
     return result;
   }
+
+  void printNode(){
+    printf("|");
+    for(size_t i = 0; i < ORDER - 1; ++i){
+      printf("%llu|", key_slice[i]);
+    }
+    printf("\n");
+  }
 };
 
 Version stableVersion(Node *n){
@@ -235,20 +252,24 @@ Version stableVersion(Node *n){
 }
 
 void lock(Node *n){
-  assert(n != nullptr);
-
-  for(;;){
-    Version expected = n->version;
-    Version desired = expected;
-    desired.locked = true;
-
-    if(__atomic_compare_exchange_n(&n->version.body,
-                                &expected.body,
-                                desired.body,
-                                false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)){
-      break;
-    }
+  if(n == nullptr){
+    return;
   }
+
+  n->version.locked = true;
+
+//  for(;;){
+//    Version expected = n->version;
+//    Version desired = expected;
+//    desired.locked = true;
+//
+//    if(__atomic_compare_exchange_n(&n->version.body,
+//                                &expected.body,
+//                                desired.body,
+//                                false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)){
+//      break;
+//    }
+//  }
 }
 
 void unlock(Node *n){
