@@ -179,10 +179,10 @@ size_t cut(size_t len){
 }
 
 void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
-  uint8_t temp_key_len[Node::ORDER + 1];
-  uint64_t temp_key_slice[Node::ORDER + 1];
-  LinkOrValue temp_lv[Node::ORDER + 1];
-  KeySlice temp_suffix[Node::ORDER + 1];
+  uint8_t temp_key_len[Node::ORDER];
+  uint64_t temp_key_slice[Node::ORDER];
+  LinkOrValue temp_lv[Node::ORDER];
+  KeySlice temp_suffix[Node::ORDER];
 
   size_t insertion_index = 0;
   while (insertion_index < Node::ORDER - 1
@@ -230,17 +230,17 @@ void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
   }
 
   // clear both nodes.
-  std::fill(n->key_len, n->key_len + Node::ORDER, 0);
-  std::fill(n->key_slice, n->key_slice + Node::ORDER, 0);
-  std::fill(n->lv, n->lv + Node::ORDER, LinkOrValue{});
+  std::fill(n->key_len, n->key_len + Node::ORDER - 1, 0);
+  std::fill(n->key_slice, n->key_slice + Node::ORDER - 1, 0);
+  std::fill(n->lv, n->lv + Node::ORDER - 1, LinkOrValue{});
   n->key_suffixes.reset();
 
-  std::fill(n1->key_len, n1->key_len + Node::ORDER, 0);
-  std::fill(n1->key_slice, n1->key_slice + Node::ORDER, 0);
-  std::fill(n1->lv, n1->lv + Node::ORDER, LinkOrValue{});
+  std::fill(n1->key_len, n1->key_len + Node::ORDER - 1, 0);
+  std::fill(n1->key_slice, n1->key_slice + Node::ORDER - 1, 0);
+  std::fill(n1->lv, n1->lv + Node::ORDER - 1, LinkOrValue{});
   n1->key_suffixes.reset();
 
-  size_t split = cut(Node::ORDER);
+  size_t split = cut(Node::ORDER - 1);
 
   for(size_t i = 0; i < split; ++i){
     n->key_len[i] = temp_key_len[i];
@@ -264,6 +264,29 @@ void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
 
 }
 
+InteriorNode *create_root_with_children(Node *left, KeySlice slice, Node *right){
+  auto root = new InteriorNode;
+  root->version.is_root = true;
+  root->n_keys = 1;
+  root->key_slice[0] = slice.slice;
+  root->child[0] = left;
+  root->child[1] = right;
+  left->parent = root;
+  right->parent = root;
+  return root;
+}
+
+void insert_into_parent(InteriorNode *p, Node *n1, KeySlice slice){
+  size_t insertion_index = 0;
+}
+
+/**
+ *
+ * @param n
+ * @param k
+ * @param value
+ * @return new root if not nullptr.
+ */
 Node *split(Node *n, Key k, void *value){
   // precondition: n locked.
   assert(n->version.locked);
@@ -271,34 +294,36 @@ Node *split(Node *n, Key k, void *value){
   n->version.splitting = true;
   // n1 is initially locked
   n1->version = n->version;
-  /* split keys among n and n1, inserting k
-   *
-   * */
+  auto slice = k.getCurrentSlice();
+  split_keys_among(
+    reinterpret_cast<BorderNode *>(n),
+    reinterpret_cast<BorderNode *>(n1), k, value);
 ascend:
   InteriorNode *p = lockedParent(n);
   if(p == nullptr){
-    /* create a new interior node p with children n, n1 */
+    p = create_root_with_children(n, slice, n1);
     unlock(n);
-    /* fence required here */
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     unlock(n1);
-    /* may return p as new root. */
+    return p;
   }else if(p->isNotFull()){
     p->version.inserting = true;
     /* insert n1 into p */
     unlock(n);
-    /* fence required here */
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     unlock(n1);
+    std::atomic_thread_fence(std::memory_order_acq_rel);
     unlock(p);
+    return nullptr;
   }else{
     p->version.splitting = true;
     unlock(n);
     Node *p1 = new InteriorNode;
     p1->version = p->version;
+    // split parent
     /* split keys among p and p1, inserting n1 */
     unlock(n1); n = p; n1 = p1; goto ascend;
   }
-
-  return nullptr;
 }
 
 /**
@@ -336,7 +361,8 @@ Node *insert(Node *root, Key key, void* value){
    * Case 4: border nodeに空きが無い場合
    */
   lock(border);
-  return split(border, key, value);
+  auto new_root = split(border, key, value);
+  return new_root ? new_root : root;
 }
 
 #endif //TRANSACTIONSYSTEM_BPTREE_H
