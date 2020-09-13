@@ -92,7 +92,7 @@ struct KeySuffix{
    * bodyをリセットする
    */
   void reset(){
-    std::fill(body.begin(), body.end() + Node::ORDER - 1, KeySlice());
+    std::fill(body.begin(), body.end(), KeySlice());
   }
 };
 

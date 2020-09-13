@@ -20,6 +20,7 @@ void verify_struct_property(){
   // check struct/union size.
   static_assert(sizeof(Version) == 4);
   static_assert(sizeof(Permutation) == 8);
+  static_assert(sizeof(LinkOrValue) == 8);
 
   // check atomic.
   static_assert(can_atomic<Version>::value);

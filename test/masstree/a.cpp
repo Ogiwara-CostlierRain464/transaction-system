@@ -185,7 +185,7 @@ TEST(MasstreeTest, split){
 
   print_sub_tree(root);
 
-  auto p = get(root, Key(KeySlice(4, 1)));
+  auto p = get(root, Key(KeySlice(6, 1)));
   assert(p != nullptr);
-  EXPECT_EQ(*reinterpret_cast<int *>(p), 4);
+  EXPECT_EQ(*reinterpret_cast<int *>(p),6);
 }
