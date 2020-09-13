@@ -9,6 +9,7 @@
 #include "transaction.h"
 #include "primary_tree.h"
 #include "silo_env.h"
+#include "result.h"
 
 namespace KVSilo{
 
@@ -24,12 +25,17 @@ public:
 
   void addQueryToQueue(const Query &query);
 
+  Result &getResult(){
+    return result;
+  }
+
 private:
   size_t workerId;
   // Correspond logger.
   Logger *logger;
   PrimaryTree *primaryTree;
   SiloEnv *env;
+  Result result{};
 
 
   moodycamel::ConcurrentQueue<Query> waitingQueries;

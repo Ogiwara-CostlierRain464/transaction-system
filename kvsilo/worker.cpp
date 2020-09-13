@@ -41,7 +41,7 @@ void KVSilo::Worker::run() {
     // ここでqueryを実行することにより、Worker上で行うのと同じ意味になる
     Transaction trn(primaryTree, env);
     query(trn);
-    trn.commit();
+    trn.commit(result);
   }
 }
 

@@ -46,7 +46,7 @@ void KVSilo::Transaction::write(Key key, Value value) {
   WSet.emplace_back(r, value);
 }
 
-void KVSilo::Transaction::commit() {
+void KVSilo::Transaction::commit(Result &result) {
   std::sort(WSet.begin(), WSet.end());
   lockWSet();
 
@@ -63,8 +63,8 @@ void KVSilo::Transaction::commit() {
     || !record_tid.latest
     || (record_tid.lock && !searchWSet(record))
     ){
-      printf("ABORT.\n");
       unlockWSet();
+      result.addAbort();
       return;
     }
 
@@ -96,6 +96,7 @@ void KVSilo::Transaction::commit() {
 
   WSet.clear();
   RSet.clear();
+  result.addCommit();
 }
 
 void KVSilo::Transaction::lockWSet() {

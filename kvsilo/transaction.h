@@ -4,6 +4,7 @@
 #include <cstddef>
 #include "primary_tree.h"
 #include "silo_env.h"
+#include "result.h"
 #include <utility>
 #include <vector>
 
@@ -26,7 +27,7 @@ public:
 
   Value read(Key);
   void write(Key key, Value value);
-  void commit();
+  void commit(Result &result);
 private:
   PrimaryTree *primaryTree;
   std::vector<RElement> RSet;

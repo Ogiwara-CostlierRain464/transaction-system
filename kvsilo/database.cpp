@@ -76,12 +76,16 @@ void KVSilo::Database::leaderWork() {
 void KVSilo::Database::terminate() {
   env.stop.store(true, std::memory_order_release);
 
+  Result totalResult{};
+
   leaderThread.join();
 
   for(auto &t: workerThreads){
     t.join();
   }
+
   for(auto &w: workers){
+    totalResult.collect(w->getResult());
     delete w;
   }
 
@@ -91,5 +95,7 @@ void KVSilo::Database::terminate() {
   for(auto &l: loggers){
     delete l;
   }
+
+  totalResult.printResult();
 }
 
