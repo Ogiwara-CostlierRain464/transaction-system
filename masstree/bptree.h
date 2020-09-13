@@ -13,7 +13,7 @@
  * を作り、このprocedureを呼び出す。
  *
  */
-void keyInsertAfterNewLayer(BorderNode *root, Key k, void *value){
+void key_insert_after_new_layer(BorderNode *root, Key k, void *value){
   // Rootとなるborderを渡す必要
   assert(root->version.is_root);
   // hasNextでないなら、新しいlayerを作る必要はない。
@@ -94,7 +94,7 @@ Node *start_new_tree(Key key, void *value){
         auto next = new BorderNode;
         next->version.is_root = true;
         root->lv[0].next_layer = next;
-        keyInsertAfterNewLayer(next, key, value);
+        key_insert_after_new_layer(next, key, value);
       }else{
         root->key_len[0] = 8;
         root->key_suffixes.set(0, key.getCurrentSlice());
@@ -152,7 +152,7 @@ void insert_into_border(BorderNode *border, Key key, void *value){
         auto next = new BorderNode;
         next->version.is_root = true;
         border->lv[insertion_point].next_layer = next;
-        keyInsertAfterNewLayer(next, key, value);
+        key_insert_after_new_layer(next, key, value);
       }else{
         border->key_len[insertion_point] = 8;
         border->key_suffixes.set(insertion_point, key.getCurrentSlice());
@@ -264,7 +264,7 @@ void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
         auto next = new BorderNode;
         next->version.is_root = true;
         temp_lv[insertion_index].next_layer = next;
-        keyInsertAfterNewLayer(next, k, value);
+        key_insert_after_new_layer(next, k, value);
       }else{
         temp_key_len[insertion_index] = 8;
         temp_suffix[insertion_index] = k.getCurrentSlice();
