@@ -188,6 +188,9 @@ TEST(MasstreeTest, split){
   // B+ tree自体の見直しが必要
   // keyより左に来るのは、どんな値なのか？など
   // それ以外は大体完了
+  // また、いくつかの重要な性質(findChildはnullを返さないなど)
+  // keyの左側には何が来るのか？など
+
 
   auto p = get(root, Key(KeySlice(17, 1)));
   assert(p != nullptr);
