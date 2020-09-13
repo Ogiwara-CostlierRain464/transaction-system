@@ -178,6 +178,54 @@ size_t cut(size_t len){
     return len/2+1;
 }
 
+void split_keys_among(InteriorNode *p, InteriorNode *p1, KeySlice slice, Node *n1){
+  uint64_t temp_key_slice[Node::ORDER];
+  Node* temp_child[Node::ORDER + 1];
+
+  size_t insertion_index = 0;
+  while (insertion_index < Node::ORDER - 1
+  && p->key_slice[insertion_index] < slice.slice){
+    ++insertion_index;
+  }
+
+  for(size_t i, j = 0; i < p->n_keys + 1; ++i, ++j){
+    if(j == insertion_index + 1) ++j;
+    temp_child[j] = p->child[i];
+  }
+  for(size_t i, j = 0; i < p->n_keys; ++i, ++j){
+    if(j == insertion_index) ++j;
+    temp_key_slice[j] = p->key_slice[i];
+  }
+
+  temp_child[insertion_index + 1] = n1;
+  temp_key_slice[insertion_index] = slice.slice;
+
+  std::fill(p->key_slice, p->key_slice + Node::ORDER + 1, 0);
+  std::fill(p->child, p->child + Node::ORDER, nullptr);
+  p->n_keys = 0;
+
+  size_t split = cut(Node::ORDER);
+
+  size_t i, j;
+  for(i = 0; i < split - 1; ++i){
+    p->child[i] = temp_child[i];
+    p->key_slice[i] = temp_key_slice[i];
+    ++p->n_keys;
+  }
+  p->child[i] = temp_child[i];
+  for(++i, j = 0; i < Node::ORDER; ++i, ++j){
+    p1->child[j] = temp_child[i];
+    p1->key_slice[j] = temp_key_slice[i];
+    ++p1->n_keys;
+  }
+  p1->child[j] = temp_child[i];
+
+  p1->parent = p->parent;
+  for(i = 0; i <= p1->n_keys; ++i){
+    p1->child[i]->parent = p1;
+  }
+}
+
 void split_keys_among(BorderNode *n, BorderNode *n1, Key &k, void *value){
   uint8_t temp_key_len[Node::ORDER];
   uint64_t temp_key_slice[Node::ORDER];
@@ -278,6 +326,20 @@ InteriorNode *create_root_with_children(Node *left, KeySlice slice, Node *right)
 
 void insert_into_parent(InteriorNode *p, Node *n1, KeySlice slice){
   size_t insertion_index = 0;
+
+  while(insertion_index <= p->n_keys &&
+  p->key_slice[insertion_index] < slice.slice){
+    ++insertion_index;
+  }
+
+  // move to right
+  for(size_t i = p->n_keys; i > insertion_index; --i){
+    p->key_slice[i + 1] = p->key_slice[i];
+    p->child[i + 1] = p->child[i];
+  }
+  p->child[insertion_index + 1] = n1;
+  p->key_slice[insertion_index] = slice.slice;
+  ++p->n_keys;
 }
 
 /**
@@ -308,7 +370,7 @@ ascend:
     return p;
   }else if(p->isNotFull()){
     p->version.inserting = true;
-    /* insert n1 into p */
+    insert_into_parent(p, n1, slice);
     unlock(n);
     std::atomic_thread_fence(std::memory_order_acq_rel);
     unlock(n1);
@@ -320,8 +382,9 @@ ascend:
     unlock(n);
     Node *p1 = new InteriorNode;
     p1->version = p->version;
-    // split parent
-    /* split keys among p and p1, inserting n1 */
+    split_keys_among(
+      reinterpret_cast<InteriorNode *>(p),
+      reinterpret_cast<InteriorNode *>(p1), slice, n1);
     unlock(n1); n = p; n1 = p1; goto ascend;
   }
 }
