@@ -35,7 +35,7 @@ struct InteriorNode: Node{
      * B+ treeと同じ走査方法
      */
     for(size_t i = 0; i < n_keys; ++i){
-      if(key.slice <= key_slice[i]){
+      if(key.slice < key_slice[i]){
         return child[i];
       }
     }

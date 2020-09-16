@@ -26,7 +26,7 @@ struct Result{
 
     uint64_t result = totalCommitCounts / waitSeconds;
     std::cout <<
-    "Latency[ns]:\t" << std::powl(10.0, 9.0) / result << std::endl;
+    "Latency[ns]:\t" << powl(10.0, 9.0) / result << std::endl;
     std::cout <<
     "Throughput[tps]:\t" << result << std::endl;
   }

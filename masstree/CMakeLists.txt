@@ -1,9 +1,6 @@
 set(ENV{CC} gcc)
 set(ENV{CXX} g++)
 
-#set(CMAKE_C_COMPILER "gcc")
-#set(CMAKE_CXX_COMPILER "g++")
-
 project(Masstree)
 
 set(CXX_STANDARD_REQUIRED ON)

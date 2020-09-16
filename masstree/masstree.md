@@ -27,3 +27,7 @@ Interior node内のkey sliceがある
 
 まず、version内の情報 is_rootとか
 を更新し忘れている。
+
+B+ treeのルールの理解があやふや。
+しっかり確認し、B+ tree部分を完成させる。
+当然、BorderとInteriorの違いには注意する。
