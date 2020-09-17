@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <optional>
 #include <tuple>
+#include <iostream>
 #include "version.h"
 #include "key.h"
 #include "permutation.h"

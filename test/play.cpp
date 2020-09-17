@@ -25,6 +25,7 @@ array<int,2> a(){
 }
 
 TEST_F(Play, play) {
-  auto p = a();
-  printf("%d", p[1]);
+  std::vector<int> a = {1,2,3,4};
+  std::vector<int> b = {1,2,3,4};
+  EXPECT_EQ(a == b, true);
 }
