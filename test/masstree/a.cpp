@@ -179,8 +179,8 @@ InteriorNode *to_i(Node *n){
 TEST(MasstreeTest, split){
   Node *root = nullptr;
   for(uint64_t i = 1; i <= 24; ++i){
-    Key *k = new Key(KeySlice(i, 1));
-    root = insert(root, *k, new int(i));
+    Key k = Key(KeySlice(i, 1));
+    root = insert(root, k, new int(i));
   }
 
   print_sub_tree(root);

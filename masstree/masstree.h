@@ -30,12 +30,12 @@ struct InteriorNode: Node{
   uint64_t key_slice[ORDER - 1] = {};
   Node *child[ORDER] = {};
 
-  Node* findChild(KeySlice key){
+  Node* findChild(KeySlice slice){
     /**
-     * B+ treeと同じ走査方法
+     * B+ treeのinterior nodeと同じ走査方法
      */
     for(size_t i = 0; i < n_keys; ++i){
-      if(key.slice < key_slice[i]){
+      if(slice.slice < key_slice[i]){
         return child[i];
       }
     }
@@ -68,13 +68,9 @@ union LinkOrValue{
  */
 struct KeySuffix{
   // NOTE: 性能改善の余地
-  std::array<KeySlice, Node::ORDER - 1> body;
+  std::array<KeySlice, Node::ORDER - 1> body = {};
 
   KeySuffix()= default;
-
-  KeySlice operator[](size_t i){
-    return body[i];
-  }
 
   KeySlice get(size_t i){
     return body[i];
@@ -109,7 +105,7 @@ struct BorderNode: Node{
    * border nodeの各key_sliceの中の
    * sliceの長さ(byte数)を表す
    *
-   * 1~7の時
+   * 1~8の時
    * LinkOrValueにはvalueがある
    *
    * 8の時
@@ -184,7 +180,7 @@ struct BorderNode: Node{
         if(key_slice[i] == current.slice){
           if(key_len[i] == 8){
             // suffixの中を見る
-            if(key_suffixes[i].slice == key.next().slice){
+            if(key_suffixes.get(i).slice == key.next().slice){
               return std::tuple(VALUE, lv[i], i);
             }else{
               return std::tuple(NOTFOUND, LinkOrValue{}, 0);
