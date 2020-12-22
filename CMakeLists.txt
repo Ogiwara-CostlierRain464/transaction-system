@@ -16,6 +16,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_link_options(-lpthread)
 
+find_package(Boost 1.67 REQUIRED)
+
+include_directories(${Boost_INCLUDE_DIRS})
+
 add_subdirectory(silo)
 add_subdirectory(ss2pl)
 add_subdirectory(cicada)

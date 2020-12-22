@@ -6,6 +6,7 @@
 #include <optional>
 #include <functional>
 #include <string>
+#include <boost/lockfree/stack.hpp>
 
 
 
@@ -19,13 +20,17 @@ class Play: public ::testing::Test{
 
 
 array<int,2> a(){
-  array<int,2> p{1,2};
 
-  return p;
+
 }
 
 TEST_F(Play, play) {
-  std::vector<int> a = {1,2,3,4};
-  std::vector<int> b = {1,2,3,4};
-  EXPECT_EQ(a == b, true);
+  boost::lockfree::stack<int> l(20);
+
+  l.push(3);
+  l.push(4);
+
+  int i;
+  l.pop(i);
+  EXPECT_EQ(i, 4);
 }
