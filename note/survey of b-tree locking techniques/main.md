@@ -6,6 +6,10 @@ A survey of B-tree locking techniquesのまとめ
 - 具体例を十分にあげる
 - B-treeの並行性制御とRange Queryに注目し、Recoverの話題は扱わない
 
+どこをまとめるか、逆にどこをまとめないで要調査にすべきかしっかり書いておく
+これだけ読めばいい、というのは無理がある。自然な文脈はやはり元論文を読んでもらうしか。
+SO, I focus to make this document as to do complementary explanation.
+
 
 # 3.1 B-Treeの二種類の「ロック」
 
@@ -117,7 +121,93 @@ deadlockやlivelock、starvationについても同様に、実行単位とステ
 2つめの問題は
 latch coupling, hand-over-hand lockingとも呼ばれる。
 
+なんかあんまり関係ない話が続いてる。無視。
+とはいえど、I/O周りの話はうまくまとめるべきか？
+Range 周りに注目したいから飛ばす！
 
 ## B-link tree
+　
+B-linkのedge caseの解説はいいや
+しかしながら、やはりコーナーケースの解説は望まれるであろう。
+出ないと、「はいはい知っている」になる
+
+# 5. Protecting a B-Tree's logical contents
+
+B-Treeの論理的要素をどのように保護するかについての章。lockについて主に扱う。
+lock durationやtransaction isolation levelについても[Granularity of Locks]で確認しておこう。
+
+# 5.1 Key Range Locking
+Key range lockingはPredicate lockingの特別な形である。純粋なPredicate lockingも、Key Range locking以上に
+精度の高いlockingも製品版では扱われていない。　
+
+Key Range lockingとよく混同しがちなのが、scanである。
+Key range lockはinsert/delete操作時に、key value間のgapを保護する仕組みである。これに対し、
+scanは広い幅のkey中にある複数のデータの読み込みを、一つのatomicな操作として実現する仕組みである。この時、
+scanはkey range lockingを複数持つと言える。
+
+Key Range lockingの手法として最も基本的なのは、[ARIES/KVL]で導入されたnext key lockingである。
+
+
+
+![scan](scan1-4.jpeg)
+
+Next key lockingでは、scan時には終端のkey(ここでは4)の次のkey(ここでは5)のlockを行う。
+
+
+![insert](insert4.jpeg)
+![delete](delete4.jpeg)
+
+insertの時には、挿入しようとしているkeyの次のkeyへのlockを試みる。これにより、scan1~4と
+insert4がconcurrentに実行されても、next keyのlockにより排他的に実行され、phantom anomalyを避けられる。
+
+deleteの時にも同様に、削除しようとしているkeyの次のkeyへのlockにより、phantom anomalyを避ける。
+また、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることも保証できる。
+
+![gap](gap.jpeg)
+
+Key Range lockingで保護できる範囲について考えてみよう。Next key lockingで保護できた範囲は、
+①の範囲である。previous key lockingでは③の範囲を保護できる。もしここで、④や
+⑤のような範囲について保護できたらどうであろうか？
+
+①はNext key lockingで保護できる範囲、③はPrevious key lockingで保護できる範囲である。
+②はkey valueそのものを保護する範囲で、これだけではKey Range lockingには使えない。
+④は開区間(1174, 1179)を保護する。ここがlockできると、例えば一つのtransactionが1175の挿入を
+している時に、別のtransactionによる1174のrecordのupdateを許容できる。ただし、二つ目のtransactionは
+一つ目のtransactionのlockが解放されるまで、1174の削除はできない。⑤も同様の議論ができる。
+
+④や⑤のようなlock、あるいは②と④を組み合わせて③のlockを実現する機構を作ると、Next/Previous key locking以上の
+concurrencyを実現できるに違いない。
+そこで、今後はlockされる単位として②のようなkey valueと、④のようなopen intervalの二つを扱おう。この二つを
+組み合わせればhalf-open intervalとして③のkey range lockingが実現でき、previous key lockingが実現できる。
+
+
+# 5.2 Key Range Locking and Ghost Records
+
+
+ただしghostを使えばいらない
+
+
+
+ghost record
+
+そもそもとして、next key lockingを発端として、gapというものを
+lock unitに付け加えることができた
+
+next key lockingの導入(ARIES/KVLでの導入)
+↓
+よくよく調べて見ると、
+
+
+NSとかの導入の原点
+key valueとopen setを別々にlockしなきゃいけない
+
+
+half-open上にNSや XSなどのlockを記載する(子が二つしかないことを利用して、一つにまとめてconcurrencyをあげる。)
+
+これによってconcurrencyをあげることができる
+
+このとき、実現しようとしていること自体はhalf-open, key value, open-set自体のlockである。key valueとopen-setにかけるlockの種類からhalf-openのlockは決まるので、implicit lockであると言える！
+
+
 
 
