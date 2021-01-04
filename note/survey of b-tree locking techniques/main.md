@@ -182,6 +182,8 @@ concurrencyを実現できるに違いない。
 
 
 # 5.2 Key Range Locking and Ghost Records
+実際にkey valueをtreeから削除するのではなく、ghost record bitを
+使うと、例えばdeleteの時にrollbackを成功させるためのNext 
 
 
 ただしghostを使えばいらない
