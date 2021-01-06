@@ -125,6 +125,8 @@ latch coupling, hand-over-hand lockingとも呼ばれる。
 とはいえど、I/O周りの話はうまくまとめるべきか？
 Range 周りに注目したいから飛ばす！
 
+ARIES/KVLでcompensation logとか
+
 ## B-link tree
 　
 B-linkのedge caseの解説はいいや
@@ -195,79 +197,11 @@ next/previous key lockingが実現できた。
 しかしながら、key valueとopen intervalを組み合わせてできるhalf-open intervalのlockには二回の操作を
 必要とする。そこで、multi granularity lockingを使うことによりこの問題を解決できる。
 
-## multi granularity locking ([Granularity of Locks]より)
-データベースで問題となるのは、lockする単位の選択であろう。lockする単位・粒度の選択は、concurrencyとlock機構
-のトレードオフを決定する。
-粒度の高いlockは、少しの要素にのみアクセスするトランザクションとは相性が良い。これは、lockされる範囲が最小限になり、
-concurrencyをあげるからである。しかしながら、多くの要素にアクセスするトランザクションとは相性が悪い。これは、
-lockするべき要素が多いことにより、lock managerへのアクセスが多くなることによるオーバーヘッド、さらにメモリの圧迫に
-繋がる。
+multi granularity lockingについては`multi_granularity_locking.md`を参照。
 
-粒度の低いlockは逆に、多くの要素にアクセスするトランザクションとは相性が良く、少しの要素にのみアクセスするトランザクションとは相性が悪い。　
-
-まとめると、高い粒度を選択できれば排他制御される範囲が狭くなるのでconcurrencyがあがる。しかしlockのオーバーヘッドが大きくなる可能性がある。
-低い粒度を選択できればlockのオーバーヘッドが小さいが、排他制御される範囲が広くなるのでconcurrencyは下がる。
-
-これらの比較により、異なる粒度でlockできるようにすることが望ましいと考えられる。
-
-Multi granularity lockingは、いかのような方法で管理する。まずデータベース中のリソースを木構造で管理する。
-次に、lockのモードとしてS(Shared)とX(Exclusive)を導入する。木構造中の各ノードにどちらかのmodeのlockをかけると、そのノード自身及び
-そのノードをrootするsubtree全体が暗黙的にlockがかけられる。
-
-![one](granularity1.jpeg)
-
-この例では、一つのS lockが高さ1のnodeに、二つのX lockがleaf nodeにかけられている。色の違いは別々のトランザクションからのlockを表す。
-S lockがかけられたnodeをrootするsubtree全体が、明示的なlockなしに、暗黙的にlockがかけられている。
-
-![two](granularity2.jpeg)
-
-この例では、二つのS lockがかけられている。S lockは共有lockなので、lockする領域が
-二つのS lockで被っていいても問題ない。
-
-![three](granularity3.jpeg)
-
-この例ではS lockとX lockの領域が被っている。S lockにより、ツリー全体が暗黙的にS lockになっている。これに対し、
-別のトランザクションによるX lockがいくつかのノードにX lockをかけている。つまり、いくつかのnodeは暗黙的に
-S lockとX lockがかかっていることになる。X lockは排他lockなため、これは不正である。
+![half open](half-open.jpeg)
 
 
-
-
-
-
-まずはヒエラルキーの導入
-
-次にSとXの導入。そしてこれはsub tree全体をlockする
-この時点で、まずI無しで例をあげる
-sub tree全体のlockにより、lockの粒度の違いを表現できる。
-
-
-our goal is to find some technique for "implicitly" locking an entire subtree.
-暗黙的なlockにより、lockのオーバーヘッドを減らすことが目標
-
-先祖がlockされるのを防ぐ
-Intention mode is used to "tag" (lock) all ancestors of a node to be locked. These tags signal the fact that 
-locking is being done at a "finer" level and prevent locks on the ancestors.
-
-もうこの段階でISとIX導入しちゃうか
-
-これにより、tree全体をみることなく、先祖で誤ったlockをとることが防げる。
-
-
-
-そして最後に、SIX
-
-
-で、よくよくまとめてみると、ちょうどそれぞれの保護の強弱がきれいに表にできる
-
-この議論は、一般には半順序集合に適用でき(つまり木構造ではなく親が二つ以上あるようなケース)
-
-treeに限定したときはhierarchyと呼べる(Survey of~ より)
-
-
-
-
-さて、戻ろう
 
 ここで、half-openとkey value open intervalの図
 
