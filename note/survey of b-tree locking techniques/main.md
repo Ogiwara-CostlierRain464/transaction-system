@@ -1,19 +1,15 @@
 # About
-A survey of B-tree locking techniquesのまとめ
+
+[A survey of B-tree locking techniques]の説明を補足する資料。
 
 # 指針
 - 後から何度でも見返せるように、プレゼン資料では失われがちな、最低限の「つなぎ」となる文章を入れる
 - 具体例を十分にあげる
 - B-treeの並行性制御とRange Queryに注目し、Recoverの話題は扱わない
 
-どこをまとめるか、逆にどこをまとめないで要調査にすべきかしっかり書いておく
-これだけ読めばいい、というのは無理がある。自然な文脈はやはり元論文を読んでもらうしか。
-SO, I focus to make this document as to do complementary explanation.
+# 3.1 Locks and Latches
 
-
-# 3.1 B-Treeの二種類の「ロック」
-
-まずは、よく混同しやすいlockとlatchの違いについてまとめておく
+まずは、よく混同しやすいlockとlatchの違いについてまとめておく。
 
 ![](fig2.jpg)
 
@@ -22,13 +18,13 @@ lockは、
 - shared, exclusiveなどのモードを使って 
 - 複数のトランザクションからの操作を分ける。
 
-ARIES/KVLでは論理ロックと呼んでいる。
+[ARIES/KVL]では論理ロックと呼んでいる。
 
 deadlockは、
 - wait for graphのチェック等によって検知し、
 - transaction abort等によって解決される
 
-lockの情報はlock managerのhash tableに保存される
+lockの情報はlock managerのhash tableに保存される。
 lock処理は通常、高価なものとなる。これは、中央で管理されるhash tableに複数のスレッドからのアクセスが
 発生し、キャッシュミスが多発するからである。lockの対象となるデータは、メモリ上になかったり、あるいはデータベース上
 にないものも扱うので、latchと違いlock tableの導入が必要となる。
@@ -38,23 +34,23 @@ latchは
 - read, writeなどのモードを使って 
 - 複数のスレッドからの操作を分ける
 
-ARIES/KVLでは物理ロックと呼ぶ
+[ARIES/KVL]では物理ロックと呼ぶ
 
 dead latchは、
 - 発生しないように十分注意してプログラムすることによって回避
 
-latchの情報は、保護の対象となるデータ構造に埋め込む
+latchの情報は、保護の対象となるデータ構造に埋め込む。
 
 latch処理は通常、安価なものとなる。これは、保護対象のデータ構造の中にlatchの情報が埋め込まれるため、
 中央データ構造での管理が発生しないため、比較的キャッシュミスが発生しにくい。
 
 
-# Recovery時のlockとlatchの違い
+# 3.2 Recovery and B-Tree Locking
 
-飛ばす。ARIES/KVL参照
+Recovery時におけるcompensation logやanalysis phaseにおけるlockと
+latchの役割の違い。ここは[ARIES/KVL]を参照しよう。
 
-
-# 3.3 Lock free 
+# 3.3 Lock-Free B-Trees 
 定義が曖昧なlock-freeについておさらいする。
 全体をMutexで保護し、並行処理を可能にしたデータ構造はlock-freeとは言えない。複数のスレッドが同時にそのデータ構造
 を操作することができないからである。
@@ -90,7 +86,7 @@ public:
 spin lockにより、blockingでないMutexを実装することができた。しかしながら、このMutexを用いてもlock-freeには
 なりえない。複数のスレッドからの操作が許容されていないことに変わりはないからである。
 
-"C++ Concurrency in Action"では、lock-freeとその周辺の用語について以下のようにまとめている。
+[C++ Concurrency in Action]では、lock-freeとその周辺の用語について以下のようにまとめている。
 
 - Obstruction-Free: もしデータ構造を操作する他の全てのthreadが止まっているならば、一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造
 - Lock-Free: もしデータ構造を複数のスレッドが操作しているならば、そのうちの一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造
@@ -105,8 +101,9 @@ lockの取得に1000回失敗したりなど、並行処理を実行するたび
 deadlockやlivelock、starvationについても同様に、実行単位とステップ数を用いて定義できる。
 
 形式的な定義にはお目に書かれたことはない。時相論理とか必要になりそう？
+[ロックフリー性の証明について]においては、進行保証の証明について上げられている。
 
-# 4.B-Treeの物理構造の保護
+# 4. Protecting A B-Tree's physical structure
 
 並行でアクセスできるようなB-Treeを設計する場合、主に以下のような4点の問題があげられる
 
@@ -116,22 +113,20 @@ deadlockやlivelock、starvationについても同様に、実行単位とステ
 4. 子ノードがオーバーフローして親ノードへのキーの挿入が求められる。最悪ケースでは、rootノードのsplitが発生する。
 
 これらの問題に対する解決策をいくつかあげる。
-## lock coupling
+## 4.2 lock coupling
 
-2つめの問題は
-latch coupling, hand-over-hand lockingとも呼ばれる。
+2つめの問題は、子ノードのlatchが獲得できるまで親ノードのlatchを確保することで解決できる。
+この手法は、 latch coupling及びhand-over-hand lockingと呼ばれる。
 
-なんかあんまり関係ない話が続いてる。無視。
-とはいえど、I/O周りの話はうまくまとめるべきか？
-Range 周りに注目したいから飛ばす！
+この節ではlock couplingと関係ない話が以降続く。
+- I/O時のlatchのリリース、rootからの再探索
+- shared・exclusive latchに加えupdate latchを導入する話
 
-ARIES/KVLでcompensation logとか
+が書かれている。
 
-## B-link tree
-　
-B-linkのedge caseの解説はいいや
-しかしながら、やはりコーナーケースの解説は望まれるであろう。
-出ないと、「はいはい知っている」になる
+## 4.3 B-link tree
+4番目の問題はB-link treeの導入によって簡単になる。
+ここでは扱わないが、B-link treeの元論文を読んでEdge caseの挙動を確認すべきであろう。
 
 # 5. Protecting a B-Tree's logical contents
 
@@ -201,21 +196,33 @@ multi granularity lockingについては`multi_granularity_locking.md`を参照�
 
 ![half open](half-open.jpeg)
 
+この手法の欠点は、half-open intervalのlockは一回のlockで済むのに対し、
+key valueかopen intervalをlockする場合には、二回のlockが必要になるという点である。
 
+ここで、lock modeを増やすことにより、half-open interval、key value、open intervalのlock
+の組み合わせを一つのlockとして表現することにより、これらのlockを一度で行うことが可能になる。
+これにより、concurrencyが上がることが期待できる。
 
-ここで、half-openとkey value open intervalの図
+half-openはS,X,IS,IXでlockできる(half-open下には二つしかnodeが無いため、
+SIXは不要)。key valueとopen intervalはS/X lockができる。
+これらのパターンを網羅し、一つのnodeで管理するには、S,X,Nのうち二つから構成される
+lockのすべてのパターンを網羅する必要がある。
 
+![combined](combined.jpeg)
 
-NSとかの導入の原点
-key valueとopen setを別々にlockしなきゃいけない
+この表は、key valueとopen intervalのlockを一つにまとめたものである。
+一つ目がkey value、二つ目がopen intervalにそれぞれ対応し、互換性は両方のlock
+でそれぞれ検証することによって簡単に導ける。SとXはぞれぞれSS・XXと等価になる。
 
+![imp](implicit.jpeg)
 
-half-open上にNSや XSなどのlockを記載する(子が二つしかないことを利用して、一つにまとめてconcurrencyをあげる。)
+この時、half-openは「暗黙的に」ISかIXになる。例えば、SXの場合は、
+それと等価な木構造は上のようになる。この時、half-openはIXに暗黙的に決定される。
 
-これによってconcurrencyをあげることができる
+# 参考
 
-このとき、実現しようとしていること自体はhalf-open, key value, open-set自体のlockである。key valueとopen-setにかけるlockの種類からhalf-openのlockは決まるので、implicit lockであると言える！
-
-
-
-
+- [A Survey of B-Tree Locking Techniques] Goetz Graefe.
+- [Granularity of Locks and Degrees of Consistency] Gray et al.
+- [ARIES/KVL] Mohan C.
+- [C++ Concurrency in Action] Anthony Williams.
+- [ロックフリー性の証明について] https://kumagi.hatenadiary.org/entry/20141214
