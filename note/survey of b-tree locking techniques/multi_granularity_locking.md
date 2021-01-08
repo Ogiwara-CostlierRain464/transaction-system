@@ -17,17 +17,17 @@ Multi granularity lockingは、いかのような方法で管理する。まず�
 次に、lockのモードとしてS(Shared)とX(Exclusive)を導入する。木構造中の各ノードにどちらかのmodeのlockをかけると、そのノード自身及び
 そのノードをrootするsubtree全体が暗黙的にlockがかけられる。
 
-![one](granularity1.jpeg)
+<img src="granularity1.jpeg" width=500>
 
 この例では、一つのS lockが高さ1のnodeに、二つのX lockがleaf nodeにかけられている。色の違いは別々のトランザクションからのlockを表す。
 S lockがかけられたnodeをrootするsubtree全体が、明示的なlockなしに、暗黙的にlockがかけられている。
 
-![two](granularity2.jpeg)
+<img src="granularity2.jpeg" width=500>
 
 この例では、二つのS lockがかけられている。S lockは共有lockなので、lockする領域が
 二つのS lockで被っていいても問題ない。
 
-![three](granularity3.jpeg)
+<img src="granularity3.jpeg" width=500>
 
 この例ではS lockとX lockの領域が被っている。
 S lockにより、ツリー全体が暗黙的にS lockになっている。これに対し、
@@ -58,8 +58,7 @@ S lockをとるnodeの全ての祖先には、ISまたはIX lockをとる必要�
 ISよりも強力なlockであると言える。このため、 IX lockの上にはIS lockをとることができない。
 しかし、IS lockの上にはIX lockをとることができる。
 
-
-![compatibility table](six-table.jpeg)
+<img src="six-table.jpeg" width=500>
 
 S lockとX lockの互換性については自明だったが、ここでISとIX lockを組み込んだときの互換性について
 まとめておく(SIXについては後述)。各Intention lock同士は同時に配置できる。
@@ -71,17 +70,17 @@ ISはSと互換性がある。これは、IS lockをかけられたnodeの下は
 細かな実装については述べられていない。特定のnodeにS/X lockをかけるにあたって、その祖先にもIS/IX lock
 を取る、という操作がatomicに行われるものとして扱われている。
 
-![4](granularity4.jpeg)
+<img src="granularity4.jpeg" width=500>
 
 これは先ほどの一つ目の例に対応する。root nodeではIS・IXに互換性があるため
 二つのlockが同時にかかっている
 
-![5](granularity5.jpeg)
+<img src="granularity5.jpeg" width=500>
 
 これは二つ目の例に対応。最初に赤のtransactionがlockをとったとしよう。青のトランザクションは
 rootにS lockをとることを試みる。互換性がテーブより、SはISと互換性がある。よってS lockは成功。
 
-![6](granularity6.jpeg)
+<img src="granularity6.jpeg" width=500>
 
 これは三つ目の例に対応。最初に青がlockをとる。赤はX lockはとれるが、IX lockは取れない。
 これにより、不正な状態を回避できる。

@@ -11,7 +11,7 @@
 
 まずは、よく混同しやすいlockとlatchの違いについてまとめておく。
 
-![](fig2.jpg)
+<img src="fig2.jpg" width=500>
 
 lockは、
 - pageやB-treeのkeyなどのデータベースのコンテンツを保護するために、
@@ -145,14 +145,12 @@ scanはkey range lockingを複数持つと言える。
 Key Range lockingの手法として最も基本的なのは、[ARIES/KVL]で導入されたnext key lockingである。
 
 
-
-![scan](scan1-4.jpeg)
+<img src="scan1-4.jpeg" width=500>
 
 Next key lockingでは、scan時には終端のkey(ここでは4)の次のkey(ここでは5)のlockを行う。
 
-
-![insert](insert4.jpeg)
-![delete](delete4.jpeg)
+<img src="insert4.jpeg" width=500>
+<img src="delete4.jpeg" width=500>
 
 insertの時には、挿入しようとしているkeyの次のkeyへのlockを試みる。これにより、scan1~4と
 insert4がconcurrentに実行されても、next keyのlockにより排他的に実行され、phantom anomalyを避けられる。
@@ -160,7 +158,7 @@ insert4がconcurrentに実行されても、next keyのlockにより排他的に
 deleteの時にも同様に、削除しようとしているkeyの次のkeyへのlockにより、phantom anomalyを避ける。
 また、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることも保証できる。
 
-![gap](gap.jpeg)
+<img src="gap.jpeg" width=500>
 
 Key Range lockingで保護できる範囲について考えてみよう。Next key lockingで保護できた範囲は、
 ①の範囲である。previous key lockingでは③の範囲を保護できる。もしここで、④や
@@ -194,7 +192,7 @@ next/previous key lockingが実現できた。
 
 multi granularity lockingについては`multi_granularity_locking.md`を参照。
 
-![half open](half-open.jpeg)
+<img src="half-open.jpeg" width=500>
 
 この手法の欠点は、half-open intervalのlockは一回のlockで済むのに対し、
 key valueかopen intervalをlockする場合には、二回のlockが必要になるという点である。
@@ -208,13 +206,13 @@ SIXは不要)。key valueとopen intervalはS/X lockができる。
 これらのパターンを網羅し、一つのnodeで管理するには、S,X,Nのうち二つから構成される
 lockのすべてのパターンを網羅する必要がある。
 
-![combined](combined.jpeg)
+<img src="combined.jpeg" width=500>
 
 この表は、key valueとopen intervalのlockを一つにまとめたものである。
 一つ目がkey value、二つ目がopen intervalにそれぞれ対応し、互換性は両方のlock
 でそれぞれ検証することによって簡単に導ける。SとXはぞれぞれSS・XXと等価になる。
 
-![imp](implicit.jpeg)
+<img src="implicit.jpeg" width=500>
 
 この時、half-openは「暗黙的に」ISかIXになる。例えば、SXの場合は、
 それと等価な木構造は上のようになる。この時、half-openはIXに暗黙的に決定される。
