@@ -20,17 +20,17 @@ Multi granularity lockingは、いかのような方法で管理する。まず�
 次に、lockのモードとしてS(Shared)とX(Exclusive)を導入する。木構造中の各ノードにどちらかのmodeのlockをかけると、そのノード自身及び
 **そのノードをrootするsubtree全体**が暗黙的にlockがかけられる。
 
-<img src="granularity1.jpeg" width=500>
+<img src="granularity1.jpeg" width=300>
 
 この例では、一つのS lockが高さ1のnodeに、二つのX lockがleaf nodeにかけられている。色の違いは別々のトランザクションからのlockを表す。
 S lockがかけられたnodeをrootするsubtree全体が、明示的なlockなしに、暗黙的にlockがかけられている。
 
-<img src="granularity2.jpeg" width=500>
+<img src="granularity2.jpeg" width=300>
 
 この例では、二つのS lockがかけられている。S lockは共有lockなので、lockする領域が
 二つのS lockで被っていいても問題ない。
 
-<img src="granularity3.jpeg" width=500>
+<img src="granularity3.jpeg" width=300>
 
 この例ではS lockとX lockの領域が被っている。
 S lockにより、ツリー全体が暗黙的にS lockになっている。これに対し、
@@ -76,12 +76,12 @@ ISはSと互換性がある。これは、IS lockをかけられたnodeの下は
 細かな実装については述べられていない。特定のnodeにS/X lockをかけるにあたって、その祖先にもIS/IX lock
 を取る、という操作がatomicに行われるものとして扱われている。
 
-<img src="granularity4.jpeg" width=500>
+<img src="granularity4.jpeg" width=300>
 
 これは先ほどの一つ目の例に対応する。root nodeではIS・IXに互換性があるため
 二つのlockが同時にかかっている
 
-<img src="granularity5.jpeg" width=500>
+<img src="granularity5.jpeg" width=300>
 
 これは二つ目の例に対応。最初に赤のtransactionがlockをとったとしよう。青のトランザクションは
 rootにS lockをとることを試みる。互換性がテーブより、SはISと互換性がある。よってS lockは成功。
@@ -93,7 +93,7 @@ rootにS lockをとることを試みる。互換性がテーブより、SはIS�
 
 
 ## SIXの導入
-<img src="six.jpeg" width=500>
+<img src="six.jpeg" width=300>
 
 図の1のように、subtreeの多くのnodeをreadし、いくつかのnodeについてはwriteをするケースを考えてみよう。今までのmodeを組み合わせると、multi granularity lockingでは2あるいは3のようにして保護できるであろう。ここでは子nodeの数が高々6なのでどちらでも大差はないように感じられるが、ここでもし子nodeの数が100で、そのうち2個のnodeに対してwrite、それ以外は全てreadをするとしよう。その場合、2ではS lockを98個もとる必要があり、lockのオーバーヘッドが大きくなる。逆に、3のようなケースでは他のtransactionが子nodeのいくつかの要素のreadしかしないにも関わらずS lockが確保できなくなり、concurrencyが低下する。
 
