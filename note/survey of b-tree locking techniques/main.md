@@ -186,8 +186,7 @@ deleteの時にも同様に、削除しようとしているkeyの次のkeyへ�
 <img src="gap.jpeg" width=500>
 
 Key Range lockingで保護できる範囲について考えてみよう。Next key lockingで保護できた範囲は、
-①の範囲である。previous key lockingでは③の範囲を保護できる。もしここで、④や
-⑤のような範囲について保護できたらどうであろうか？
+①の範囲である(ここで面白いのが、本来のNext key lockingではこれを代用してkey valueの保護にも用いている。つまり、②のような範囲だけを保護することはできなかった)。previous key lockingでは③の範囲を保護できる。もしここで、④や⑤のような範囲について保護できたらどうであろうか？
 
 ①はNext key lockingで保護できる範囲、③はPrevious key lockingで保護できる範囲である。
 ②はkey valueそのものを保護する範囲で、これだけではKey Range lockingには使えない。
