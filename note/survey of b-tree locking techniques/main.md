@@ -2,10 +2,17 @@
 
 [A survey of B-tree locking techniques]の説明を補足する資料。
 
+
+# 目次
+- Locks and Latches
+- Lock-Free B-Trees
+- Key Range Locking
+- Key Range Locking as Hierarchical locking
+
 # 指針
 - 後から何度でも見返せるように、プレゼン資料では失われがちな、最低限の「つなぎ」となる文章を入れる
 - 具体例を十分にあげる
-- B-treeの並行性制御とRange Queryに注目し、Recoverの話題は扱わない
+- B-treeの並行性制御とRange Queryに注目し、Recoveryの話題は扱わない
 
 # 3.1 Locks and Latches
 
@@ -25,9 +32,7 @@ deadlockは、
 - transaction abort等によって解決される
 
 lockの情報はlock managerのhash tableに保存される。
-lock処理は通常、高価なものとなる。これは、中央で管理されるhash tableに複数のスレッドからのアクセスが
-発生し、キャッシュミスが多発するからである。lockの対象となるデータは、メモリ上になかったり、あるいはデータベース上
-にないものも扱うので、latchと違いlock tableの導入が必要となる。
+lock処理は通常、高価なものとなる。これは、中央で管理されるhash tableに複数のスレッドからのアクセスが発生し、キャッシュミスが多発するからである。lockの対象となるデータは、メモリ上になかったり、あるいはデータベース上にないものも扱うので、latchと違いlock tableの導入が必要となる。
 
 latchは
 - buffer pool中のB-tree pageやbuffer poolの management tableなど、 メモリ中のデータ構造を保護するために、
@@ -62,7 +67,6 @@ Mutexはblocking callを用いずに実装することが可能である。例�
 
 ```c++
 #include <atomic>
-
 class spinlock_mutex{
   std::atomic_flag flag;
   
@@ -83,17 +87,38 @@ public:
 ここでは、test and setが成功するまでwhile loopをすることによりロックの確保を実現している。このようなlockの
 実装をspin lockという。
 
-spin lockにより、blockingでないMutexを実装することができた。しかしながら、このMutexを用いてもlock-freeには
-なりえない。複数のスレッドからの操作が許容されていないことに変わりはないからである。
+spin lockにより、blockingでないmutexを実装することができた。このような実装のmutexを用いるデータ構造を、nonblockingなデータ構造と呼ぶ。しかしながら、次のようなthreadsafeなstackの実装を考えてみよう。
 
-[C++ Concurrency in Action]では、lock-freeとその周辺の用語について以下のようにまとめている。
 
-- Obstruction-Free: もしデータ構造を操作する他の全てのthreadが止まっているならば、一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造
-- Lock-Free: もしデータ構造を複数のスレッドが操作しているならば、そのうちの一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造
-- Wait-Free: データ構造を操作している全てのスレッドが、その処理を特定ステップ数以下で完了できるデータ構造
+```c++
+class threadsafe_stack{
+  spinlock_mutex mutex;
 
-ここで重要なのは、まず「特定のステップ数以下」というのはソースコードから予測できる程度のステップ数以下で処理が完了することを表す。
-lockの取得に1000回失敗したりなど、並行処理を実行するたびにステップ数に大きなばらつきがあってはいけない。
+public:
+  void push(int num){
+    mutex.lock();
+    ...
+    mutex.unlock();
+  }
+
+  int pop(){
+    mutex.lock();
+    ...
+    mutex.unlock();
+  }
+};
+```
+
+このstackはnonblockingではあるが、各操作を行うたびにデータ構造全体を保護しているため、lock-freeなデータ構造とは言えない。すなわち、nonblockingであるかどうかと、lock-freeであるかどうかは別問題なのだ。
+
+
+では、lock-freeはどのように定義できるであろうか？[C++ Concurrency in Action]では、lock-freeとその周辺の用語について以下のようにまとめている。
+
+- Obstruction-Free: もしデータ構造を操作する他の全てのthreadが止まっているならば、一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造。複数の操作が並行に実行されることは無い。
+- Lock-Free: もしデータ構造を複数のスレッドが操作しているならば、そのうちの一つのスレッドが特定ステップ数以下で処理を完了できるデータ構造。複数の操作が並行に実行でき、少なくともそれらのうち一つの操作が特定ステップ数以下で処理を完了できる。
+- Wait-Free: データ構造を操作している全てのスレッドが、その処理を特定ステップ数以下で完了できるデータ構造。複数の操作が並行に実行でき、全ての操作が特定ステップ数以下で処理を完了できる。
+
+ここで重要なのは、まず「特定のステップ数以下」でない状態というのは、例えばspin loopからしばらく抜け出せない状況を表す。lock-freeのアルゴリズムにおいて、データ構造中で同じメモリにアクセスしないスレッド同士は並行に処理を実行できる。これがObstruction-Freeとlock-freeの違いである。しかしながら、データ構造中にて同じメモリにアクセスするスレッド同士が競合する場合は片方のスレッドはspin-lockなどによって待機する必要がある。これがwait-freeとlock-freeの違いである。spin-lockなどによって、ソースコードから予測できる程度のステップ数以下で処理が完了しなくなる。
 
 もう一つ重要なのは、lock(データベースの文脈ではlatch)の実装に依るのではなく、実行形態がどうなるか、つまり実行単位(スレッド)
 とステップ数にのみ注目して定義付けがなされているということだ。blocking callを実装に使っているか否かは定義とはあまり関係がない。
