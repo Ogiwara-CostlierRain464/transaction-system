@@ -187,7 +187,7 @@ insertの時には、挿入しようとしているkeyの次のkeyへのlockを�
 <img src="delete4.jpeg" width=500>
 
 
-delete4の時にはphantom anomalyを避けるだけならnext key(5)のlockは必要ではない。これはもし並行にscan1~4が実行されていた場合、キー4がすでに物理的に存在していることからlockができる空である。しかしながらここでは、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることを保証できる。
+delete4の時にはphantom anomalyを避けるだけならnext key(5)のlockは必要ではない。これはもし並行にscan1~4が実行されていた場合、キー4がすでに物理的に存在していることからlockができるからである。しかしながらここでは、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることを保証できる。
 
 <img src="gap.jpeg" width=500>
 
