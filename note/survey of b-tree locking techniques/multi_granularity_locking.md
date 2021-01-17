@@ -93,7 +93,7 @@ rootにS lockをとることを試みる。互換性がテーブより、SはIS�
 
 
 ## SIXの導入
-<img src="six.jpeg" width=300>
+<img src="SIX.jpeg" width=300>
 
 図の1のように、subtreeの多くのnodeをreadし、いくつかのnodeについてはwriteをするケースを考えてみよう。今までのmodeを組み合わせると、multi granularity lockingでは2あるいは3のようにして保護できるであろう。ここでは子nodeの数が高々6なのでどちらでも大差はないように感じられるが、ここでもし子nodeの数が100で、そのうち2個のnodeに対してwrite、それ以外は全てreadをするとしよう。その場合、2ではS lockを98個もとる必要があり、lockのオーバーヘッドが大きくなる。逆に、3のようなケースでは他のtransactionが子nodeのいくつかの要素のreadしかしないにも関わらずS lockが確保できなくなり、concurrencyが低下する。
 
@@ -129,3 +129,5 @@ rootにS lockをとることを試みる。互換性がテーブより、SはIS�
 ## 参考文献
 - [Granularity of Locks and Degrees of Consistency] Gray et al.
 
+## 足りない点
+証明
