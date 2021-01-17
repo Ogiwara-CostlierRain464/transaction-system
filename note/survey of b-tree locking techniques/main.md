@@ -170,25 +170,31 @@ scanはkey range lockingを複数持つと言える。
 Key Range lockingの手法として最も基本的なのは、[ARIES/KVL]で導入されたnext key lockingである。
 
 
+"next-key"は二つの隣接するキー間のgapを守るためにロックされるキーのことを示す。
+
+<img src="scan2.jpeg" width=500>
+
+ここでは[1,4]に対してスキャンを行う例を示す。両端のキーがindex tree内にある場合にはこのようにlockをかけるが、
+
 <img src="scan1-4.jpeg" width=500>
 
-Next key lockingでは、scan時には終端のkey(ここでは4)の次のkey(ここでは5)のlockを行う。
+このように一端のキーが無い場合には、その次のキー(ここでは5)をlockする。これによって[3,5]間のロックを表し、まだindex tree上に物理的に存在していないキー4の保護を行う。
 
 <img src="insert4.jpeg" width=500>
+
+insertの時には、挿入しようとしているkeyの次のkeyへのlockを試みる。これにより、まだキー4が存在していない時にscan1~4とinsert4がconcurrentに実行されても、next keyのlockにより排他的に実行され、phantom anomalyを避けられる。
+
 <img src="delete4.jpeg" width=500>
 
-insertの時には、挿入しようとしているkeyの次のkeyへのlockを試みる。これにより、scan1~4と
-insert4がconcurrentに実行されても、next keyのlockにより排他的に実行され、phantom anomalyを避けられる。
 
-deleteの時にも同様に、削除しようとしているkeyの次のkeyへのlockにより、phantom anomalyを避ける。
-また、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることも保証できる。
+delete4の時にはphantom anomalyを避けるだけならnext key(5)のlockは必要ではない。これはもし並行にscan1~4が実行されていた場合、キー4がすでに物理的に存在していることからlockができる空である。しかしながらここでは、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることを保証できる。
 
 <img src="gap.jpeg" width=500>
 
 Key Range lockingで保護できる範囲について考えてみよう。Next key lockingで保護できた範囲は、
-①の範囲である(ここで面白いのが、本来のNext key lockingではこれを代用してkey valueの保護にも用いている。つまり、②のような範囲だけを保護することはできなかった)。previous key lockingでは③の範囲を保護できる。もしここで、④や⑤のような範囲について保護できたらどうであろうか？
+①の範囲である。previous key lockingでは③の範囲を保護できる。もしここで、④や⑤のような範囲について保護できたらどうであろうか？
 
-①はNext key lockingで保護できる範囲、③はPrevious key lockingで保護できる範囲である。
+①はNext key lockingで保護できる範囲(ここで面白いのが、本来のNext key lockingではこれを代用してkey valueの保護にも用いている。つまり、②のような範囲だけを保護することはできなかった)、③はPrevious key lockingで保護できる範囲である。
 ②はkey valueそのものを保護する範囲で、これだけではKey Range lockingには使えない。
 ④は開区間(1174, 1179)を保護する。ここがlockできると、例えば一つのtransactionが1175の挿入を
 している時に、別のtransactionによる1174のrecordのupdateを許容できる。ただし、二つ目のtransactionは
