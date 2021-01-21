@@ -128,6 +128,8 @@ deadlockやlivelock、starvationについても同様に、実行単位とステ
 形式的な定義にはお目に書かれたことはない。時相論理とか必要になりそう？
 [ロックフリー性の証明について]においては、進行保証の証明について上げられている。
 
+上の定義は[C++ Concurrency in Action]から引用した物であるが、この本の中ではどの論文から引用した物なのか記載されていなかった。調べたところ、上のように三つのfreedomに初めて分けたのは[Obstruction-Free Synchronization: Double-Ended Queues as an Example]らしい。
+
 # 4. Protecting A B-Tree's physical structure
 
 並行でアクセスできるようなB-Treeを設計する場合、主に以下のような4点の問題があげられる
@@ -189,6 +191,7 @@ insertの時には、挿入しようとしているkeyの次のkeyへのlockを�
 
 delete4の時にはphantom anomalyを避けるだけならnext key(5)のlockは必要ではない。これはもし並行にscan1~4が実行されていた場合、キー4がすでに物理的に存在していることからlockができるからである。しかしながらここでは、次のkeyのlockにより、rollback時に削除したkeyの復元、すなわち挿入に失敗しなくなることを保証できる。
 
+<img src="delete4lock.jpeg" width=500>
 <img src="gap.jpeg" width=500>
 
 Key Range lockingで保護できる範囲について考えてみよう。Next key lockingで保護できた範囲は、
@@ -196,14 +199,11 @@ Key Range lockingで保護できる範囲について考えてみよう。Next k
 
 ①はNext key lockingで保護できる範囲(ここで面白いのが、本来のNext key lockingではこれを代用してkey valueの保護にも用いている。つまり、②のような範囲だけを保護することはできなかった)、③はPrevious key lockingで保護できる範囲である。
 ②はkey valueそのものを保護する範囲で、これだけではKey Range lockingには使えない。
-④は開区間(1174, 1179)を保護する。ここがlockできると、例えば一つのtransactionが1175の挿入を
-している時に、別のtransactionによる1174のrecordのupdateを許容できる。ただし、二つ目のtransactionは
-一つ目のtransactionのlockが解放されるまで、1174の削除はできない。⑤も同様の議論ができる。
+④は開区間(1174, 1179)を保護する。ここがlockできると、例えば一つのtransactionが1175の挿入をしている時に、別のtransactionによる1174のrecordのupdateを許容できる。ただし、二つ目のtransactionは一つ目のtransactionのlockが解放されるまで、1174の削除はできない。これは、(1174, 1179)の保護にキー1174を用いている空である。⑤も同様の議論ができる。
 
 ④や⑤のようなlock、あるいは②と④を組み合わせて③のlockを実現する機構を作ると、Next/Previous key locking以上の
 concurrencyを実現できるに違いない。
-そこで、今後はlockされる単位として②のようなkey valueと、④のようなopen intervalの二つを扱おう。この二つを
-組み合わせればhalf-open intervalとして③のkey range lockingが実現でき、previous key lockingが実現できる。
+そこで、今後はlockされる単位として②のようなkey valueと、④のようなopen intervalの二つを扱おう。この二つを組み合わせればhalf-open intervalとして③のkey range lockingが実現でき、previous key lockingが実現できる。
 
 
 # 5.2 Key Range Locking and Ghost Records
@@ -213,39 +213,39 @@ concurrencyを実現できるに違いない。
 
 # 5.3 Key Range Locking as Hierarchical locking
 
-5.1節で説明したように、key valueとopen intervalに分ける事により細かいkey rangeの設定が
-できるようになった。また、それらを組み合わせることにより、half-open intervalを作り、従来の
-next/previous key lockingが実現できた。
+5.1節で説明したように、key valueとopen intervalに分ける事により細かいkey rangeの設定ができるようになった。また、それらを組み合わせることにより、half-open intervalを作り、従来のnext/previous key lockingが実現できた。
 ここで生じる問題は、key valueとopen intervalのlockは、それぞれ一回の操作で実現できる。
-しかしながら、key valueとopen intervalを組み合わせてできるhalf-open intervalのlockには二回の操作を
-必要とする。そこで、multi granularity lockingを使うことによりこの問題を解決できる。
+しかしながら、key valueとopen intervalを組み合わせてできるhalf-open intervalのlockには二回の操作(key valueとopen intervalそれぞれのlock)を必要とする。そこで、multi granularity lockingを使うことによりこの問題を解決できる。
 
 multi granularity lockingについては`multi_granularity_locking.md`を参照。
 
 <img src="half-open.jpeg" width=500>
 
-この手法の欠点は、half-open intervalのlockは一回のlockで済むのに対し、
-key valueかopen intervalをlockする場合には、二回のlockが必要になるという点である。
+この手法の欠点は、half-open intervalのlockは一回のlockで済むのに対し、key valueかopen intervalをlockする場合には、二回のlock(half-openに対するIX lockと自身に対するX lock)が必要になるという点である。
 
-ここで、lock modeを増やすことにより、half-open interval、key value、open intervalのlock
-の組み合わせを一つのlockとして表現することにより、これらのlockを一度で行うことが可能になる。
-これにより、concurrencyが上がることが期待できる。
-
-half-openはS,X,IS,IXでlockできる(half-open下には二つしかnodeが無いため、
-SIXは不要)。key valueとopen intervalはS/X lockができる。
-これらのパターンを網羅し、一つのnodeで管理するには、S,X,Nのうち二つから構成される
-lockのすべてのパターンを網羅する必要がある。
+そこで、key valueのlockとopen intervalのlockを一つにまとめたlock modeを作ってみよう。これにより、half-open interval, key value, open intervalのlockが一回の操作で実現できるようになり、concurrencyの向上が期待できる。具体的には以下の表のようなlock modeで構成される。
 
 <img src="combined.jpeg" width=500>
 
-この表は、key valueとopen intervalのlockを一つにまとめたものである。
+この表は、half-open interval, key value, open intervalのlockを一つにまとめたものである。
 一つ目がkey value、二つ目がopen intervalにそれぞれ対応し、互換性は両方のlock
 でそれぞれ検証することによって簡単に導ける。SとXはぞれぞれSS・XXと等価になる。
 
+元のmulti granularity lockingの手法においては、half-openはS,X,IS,IXでlockできた(half-open下には二つしかnodeが無いため、
+SIXは不要)。key valueとopen intervalはS/X lockができた。
+これらのパターンを網羅し、一つのnodeで管理するには、S,X,Nのうち二つから構成されるlockのすべてのパターンを網羅する必要があり、それをまとめたのが上の表である。
+
 <img src="implicit.jpeg" width=500>
 
-この時、half-openは「暗黙的に」ISかIXになる。例えば、SXの場合は、
-それと等価な木構造は上のようになる。この時、half-openはIXに暗黙的に決定される。
+この図は、左のようなmulti granularity lockingで表現されるhalf-open intervalを、右のような一つのlock modeで表現できることを表す。lock modeが表しているのはkey valueに対するlock modeと、open intervalに対するlock modeだけであるが、この二つのmodeによりhalf-openに対するlock modeが「暗黙的に」決定される。例えば、SXの場合は、
+それと等価な木構造は上のようになる。この時、half-openはIXに暗黙的に決定される。(と、論文中には記載されているが、S(SS)やX(XX)の場合にはどうなるであろうか? half-openに対するlockはIS/IXとも、S/Xとも取れる)
+
+ここでの注意点は、これはB Tree全体をmulti granularity lockingで保護しようという試みではなく、あくまでもdatabaseのlogical contentsであるindex keyが保存されているleaf nodeに対してmulti granularity lockingを適用した物である。
+
+B Treeの各要素に対するlock, latchについて[Modern B-Tree Techniques]では以下のように述べている。
+
+> Since locks pertain to database contents but not their representation, a B-tree with all contents in the leaf nodes does not require locks for the nonleaf levels of the B-tree. Latches, on the other hand, are required for all pages, independent of their role in the database.
+
 
 # 参考
 
@@ -254,3 +254,5 @@ lockのすべてのパターンを網羅する必要がある。
 - [ARIES/KVL] Mohan C.
 - [C++ Concurrency in Action] Anthony Williams.
 - [ロックフリー性の証明について] https://kumagi.hatenadiary.org/entry/20141214
+- [Modern B-Tree Techniques] Goetz Graefe.
+- [Obstruction-Free Synchronization: Double-Ended Queues as an Example] Maurice Herlihy
