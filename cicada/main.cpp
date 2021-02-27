@@ -12,43 +12,49 @@
 #include "../common/result.h"
 #include "leader_work.h"
 
+void aligned_memory_alloc(void* ptr, size_t alignment, size_t len){
+  assert(len >= alignment && "wrong parameter");
+
+#ifdef _WIN32
+  ptr = _aligned_malloc(len, alignment);
+  if(ptr == nullptr)
+    ERR;
+#else
+  if(posix_memalign((void**) &ptr, alignment, len) != 0){
+    ERR;
+  }
+#endif
+}
 
 void init(uint64_t *initialWts){
-  if(posix_memalign((void**)&ThreadRtsArrayForGroup,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&ThreadWtsArray,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&ThreadRtsArray,
-     CACHE_LINE_SIZE,
-     THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&GroupCommitIndex,
-     CACHE_LINE_SIZE,
-     THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&GroupCommitCounter,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&GCFlag,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
-  if(posix_memalign((void**)&GCExecuteFlag,
-    CACHE_LINE_SIZE,
-    THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
-    ERR;
-  }
+  aligned_memory_alloc(ThreadRtsArrayForGroup,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte));
+
+  aligned_memory_alloc(ThreadWtsArray,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte) );
+
+  aligned_memory_alloc(ThreadRtsArray,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte) );
+
+  aligned_memory_alloc(GroupCommitIndex,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte));
+
+  aligned_memory_alloc(GroupCommitCounter,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte) );
+
+  aligned_memory_alloc(GCFlag,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte));
+
+  aligned_memory_alloc(GCExecuteFlag,
+                       CACHE_LINE_SIZE,
+                       THREAD_NUM * sizeof(uint64_t_64byte));
+
 
   SLogSet = new Version* [MAX_OPERATIONS * GROUP_COMMIT];
   PLogSet = new Version** [THREAD_NUM];
@@ -67,11 +73,10 @@ void init(uint64_t *initialWts){
     ThreadRtsArrayForGroup[i].body = 0;
   }
 
-  if(posix_memalign((void**)&Table,
-    PAGE_SIZE,
-    TUPLE_NUM * sizeof(Tuple)) != 0){
-    ERR;
-  }
+  aligned_memory_alloc(Table,
+                       PAGE_SIZE,
+                       TUPLE_NUM * sizeof(Tuple));
+
 
   TimeStamp timeStamp;
   timeStamp.generateTimeStampFirst(0);

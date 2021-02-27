@@ -2,6 +2,8 @@
 #include <vector>
 #include <thread>
 #include <xmmintrin.h>
+#include <cstdlib>
+#include <malloc.h>
 #include "consts.h"
 #include "../common/atomic_wrapper.h"
 #include "../common/zip_fian.h"
@@ -21,6 +23,19 @@ using std::string;
  * Tableの初期化など
  */
 void init(){
+
+#ifdef _WIN32
+  size_t size = THREAD_NUM * sizeof(uint64_t_64byte);
+  size_t alignment = CACHE_LINE_SIZE;
+  ThreadLocalEpochs = static_cast<uint64_t_64byte *>(_aligned_malloc(size, alignment));
+  if(ThreadLocalEpochs == nullptr){
+    ERR;
+  }
+  Table = static_cast<Tuple *>(_aligned_malloc(TUPLE_NUM * sizeof(Tuple), PAGE_SIZE));
+  if(Table == nullptr){
+    ERR;
+  }
+#else
   if(posix_memalign((void**) &ThreadLocalEpochs,
     CACHE_LINE_SIZE,
     THREAD_NUM * sizeof(uint64_t_64byte)) != 0){
@@ -31,6 +46,7 @@ void init(){
     TUPLE_NUM * sizeof(Tuple)) != 0){
     ERR;
   }
+#endif
 
   size_t maxThread = decideParallelTableBuildNumber(TUPLE_NUM);
   auto partTableInit = [](size_t threadId, uint64_t start, uint64_t end){
