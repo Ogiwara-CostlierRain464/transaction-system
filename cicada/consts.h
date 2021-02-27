@@ -55,9 +55,6 @@ struct Version;
 alignas(CACHE_LINE_SIZE) extern Version ***PLogSet;
 alignas(CACHE_LINE_SIZE) extern Version **SLogSet;
 
-struct RWLock;
-extern RWLock SwalLock; //?
-extern RWLock CtrlLock; //?
 
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *GCFlag;
 alignas(CACHE_LINE_SIZE) extern uint64_t_64byte *GCExecuteFlag;
@@ -67,7 +64,7 @@ alignas(CACHE_LINE_SIZE) extern Tuple *Table;
 alignas(CACHE_LINE_SIZE) extern uint64_t InitialWts;
 
 struct Result;
-alignas(CACHE_LINE_SIZE) std::vector<Result> CicadaResult;
+alignas(CACHE_LINE_SIZE) extern std::vector<Result> CicadaResult;
 
 
 

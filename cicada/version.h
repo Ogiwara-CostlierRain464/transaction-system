@@ -2,6 +2,7 @@
 #define TRANSACTIONSYSTEM_VERSION_H
 
 #include <atomic>
+#include <cassert>
 #include "consts.h"
 
 enum VersionStatus : uint8_t {
