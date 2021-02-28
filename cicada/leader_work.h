@@ -27,28 +27,22 @@ static void leaderWork(Backoff &backoff){
   }
 
   if(gcUpdate){
-    uint64_t minWrite = loadAcquire(ThreadWtsArray[1].body);
+    uint64_t minWrite = loadAcquire(ThreadWtsArray[1].body); // ０は無視して1から、ここ0では？？？
     uint64_t minRead;
-    if(GROUP_COMMIT == 0){
-      minRead = loadAcquire(ThreadRtsArray[1].body);
-    }else{
-      minRead = loadAcquire(ThreadRtsArrayForGroup[1].body);
-    }
+
+    minRead = loadAcquire(ThreadRtsArray[1].body);
 
     // NOTE: why index starts with 1? why not 0?
+    // 0はleader thread用？
 
     for(size_t i = 1; i < THREAD_NUM; ++i){
       uint64_t  tmp = loadAcquire(ThreadWtsArray[i].body);
 
       minWrite = std::min(minWrite, tmp);
 
-      if(GROUP_COMMIT == 0){
-        tmp = loadAcquire(ThreadRtsArray[i].body);
-        minRead = std::min(minRead, tmp);
-      }else{
-        tmp = loadAcquire(ThreadRtsArrayForGroup[i].body);
-        minRead = std::min(minRead, tmp);
-      }
+
+      tmp = loadAcquire(ThreadRtsArray[i].body);
+      minRead = std::min(minRead, tmp);
     }
 
     MinWts.store(minWrite, std::memory_order_release);

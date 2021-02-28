@@ -71,6 +71,7 @@ static void genStringRepeatedNumber(
     else
       break;
   }
+  // generate write value for this thread.
   sprintf(outString, "%ld", threadId);
   for(size_t i = digit; i < valueSize - 2; i++){
     outString[i] = '0';

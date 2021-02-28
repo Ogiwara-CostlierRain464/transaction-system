@@ -8,6 +8,7 @@ struct Tuple{
   std::atomic<Version *> latest;
   std::atomic<uint64_t> minWts;
   std::atomic<uint64_t> continuingCommit;
+  // gc用のlock機構
   std::atomic<uint8_t> gcLock;
 
   Tuple()

@@ -27,10 +27,6 @@ void aligned_memory_alloc(void* ptr, size_t alignment, size_t len){
 }
 
 void init(uint64_t *initialWts){
-  aligned_memory_alloc(ThreadRtsArrayForGroup,
-                       CACHE_LINE_SIZE,
-                       THREAD_NUM * sizeof(uint64_t_64byte));
-
   aligned_memory_alloc(ThreadWtsArray,
                        CACHE_LINE_SIZE,
                        THREAD_NUM * sizeof(uint64_t_64byte) );
@@ -70,7 +66,6 @@ void init(uint64_t *initialWts){
     GroupCommitCounter[i].body = 0;
     ThreadRtsArray[i].body = 0;
     ThreadWtsArray[i].body = 0;
-    ThreadRtsArrayForGroup[i].body = 0;
   }
 
   aligned_memory_alloc(Table,
@@ -125,10 +120,7 @@ void worker(
   Backoff backoff(CLOCKS_PER_US);
 
   storeRelease(ready, 1);
-  while(!loadAcquire(start)){
-    _mm_pause();
-  }
-
+  while(!loadAcquire(start)) _mm_pause();
   while(!loadAcquire(quit)){
     makeSteps(txExecutor.steps, random, zipf, TUPLE_NUM, MAX_OPERATIONS, READ_RATIO, result);
 
@@ -145,8 +137,9 @@ void worker(
 int main(){
   uint64_t initialWts;
   init(&initialWts);
-  // TODO: find why + 2?
-  MinWts.store(initialWts + 2, std::memory_order_release);
+  // なぜ+2 => recordを生成した時より適当に時間をすすめるため、+1だと
+  // thread.rtsに-1を入れるとinitialWtsと同じになってややこしいから
+  MinWts.store(initialWts + 2);
 
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
@@ -177,6 +170,7 @@ int main(){
   }
 
   CicadaResult[0].displayAllResult(EX_TIME);
+  //delete DB
 
   return 0;
 }
