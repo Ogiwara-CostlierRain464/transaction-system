@@ -3,7 +3,6 @@
 #include <thread>
 #include <xmmintrin.h>
 #include <cstdlib>
-#include <malloc.h>
 #include "consts.h"
 #include "../common/atomic_wrapper.h"
 #include "../common/zip_fian.h"
