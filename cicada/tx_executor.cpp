@@ -3,6 +3,7 @@
 #include "../common/step.h"
 #include "../common/debug.h"
 #include "tuple.h"
+#include <cstring>
 
 
 using std::memory_order_acquire;
