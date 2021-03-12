@@ -11,8 +11,8 @@ alignas(CACHE_LINE_SIZE) std::atomic<unsigned int> FirstAllocateTimestamp;
 alignas(CACHE_LINE_SIZE) uint64_t_64byte *ThreadWtsArray;
 alignas(CACHE_LINE_SIZE) uint64_t_64byte *ThreadRtsArray;
 //alignas(CACHE_LINE_SIZE) uint64_t_64byte *ThreadRtsArrayForGroup;
-alignas(CACHE_LINE_SIZE) uint64_t_64byte *GroupCommitIndex;
-alignas(CACHE_LINE_SIZE) uint64_t_64byte *GroupCommitCounter;
+//alignas(CACHE_LINE_SIZE) uint64_t_64byte *GroupCommitIndex;
+//alignas(CACHE_LINE_SIZE) uint64_t_64byte *GroupCommitCounter;
 
 alignas(CACHE_LINE_SIZE) Version ***PLogSet;
 alignas(CACHE_LINE_SIZE) Version **SLogSet;

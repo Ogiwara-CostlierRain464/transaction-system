@@ -12,7 +12,7 @@
 #include "../common/result.h"
 #include "leader_work.h"
 
-void aligned_memory_alloc(void* ptr, size_t alignment, size_t len){
+void aligned_memory_alloc(void** ptr, size_t alignment, size_t len){
   assert(len >= alignment && "wrong parameter");
 
 #ifdef _WIN32
@@ -20,34 +20,26 @@ void aligned_memory_alloc(void* ptr, size_t alignment, size_t len){
   if(ptr == nullptr)
     ERR;
 #else
-  if(posix_memalign((void**) &ptr, alignment, len) != 0){
+  if(posix_memalign(ptr, alignment, len) != 0){
     ERR;
   }
 #endif
 }
 
 void init(uint64_t *initialWts){
-  aligned_memory_alloc(ThreadWtsArray,
+  aligned_memory_alloc((void**) &ThreadWtsArray,
                        CACHE_LINE_SIZE,
                        THREAD_NUM * sizeof(uint64_t_64byte) );
 
-  aligned_memory_alloc(ThreadRtsArray,
+  aligned_memory_alloc((void**) &ThreadRtsArray,
                        CACHE_LINE_SIZE,
                        THREAD_NUM * sizeof(uint64_t_64byte) );
 
-  aligned_memory_alloc(GroupCommitIndex,
+  aligned_memory_alloc((void**) &GCFlag,
                        CACHE_LINE_SIZE,
                        THREAD_NUM * sizeof(uint64_t_64byte));
 
-  aligned_memory_alloc(GroupCommitCounter,
-                       CACHE_LINE_SIZE,
-                       THREAD_NUM * sizeof(uint64_t_64byte) );
-
-  aligned_memory_alloc(GCFlag,
-                       CACHE_LINE_SIZE,
-                       THREAD_NUM * sizeof(uint64_t_64byte));
-
-  aligned_memory_alloc(GCExecuteFlag,
+  aligned_memory_alloc((void**) &GCExecuteFlag,
                        CACHE_LINE_SIZE,
                        THREAD_NUM * sizeof(uint64_t_64byte));
 
@@ -62,13 +54,11 @@ void init(uint64_t *initialWts){
   for(size_t i = 0; i < THREAD_NUM; ++i){
     GCFlag[i].body = 0;
     GCExecuteFlag[i].body = 0;
-    GroupCommitIndex[i].body = 0;
-    GroupCommitCounter[i].body = 0;
     ThreadRtsArray[i].body = 0;
     ThreadWtsArray[i].body = 0;
   }
 
-  aligned_memory_alloc(Table,
+  aligned_memory_alloc((void**) &Table,
                        PAGE_SIZE,
                        TUPLE_NUM * sizeof(Tuple));
 
@@ -131,6 +121,27 @@ void worker(
 
     if(loadAcquire(quit)) break;
 
+    txExecutor.begin();
+    for(auto &&it: txExecutor.steps){
+      switch (it.operation) {
+        case Operation::Read:
+          txExecutor.read(it.key);
+        break;
+        case Operation::Write:
+          txExecutor.write(it.key);
+        break;
+        case Operation::RMW:
+          txExecutor.read(it.key);
+          txExecutor.write(it.key);
+        break;
+        default:
+          ERR;
+      }
+
+      if(txExecutor.status == TXStatus::Abort){
+
+      }
+    }
   }
 }
 

@@ -16,7 +16,7 @@ enum TXStatus{
 
 struct TXExecutor {
   TXStatus status = InValid;
-  TimeStamp wts;
+  TimeStamp wts; // tx.ts ?
   std::vector<ReadElement<Tuple>> readSet;
   std::vector<WriteElement<Tuple>> writeSet;
   std::deque<GCElement<Tuple>> GCQueue;
@@ -32,8 +32,6 @@ struct TXExecutor {
   uint64_t rts;
   // for one-sided synchronization
   uint64_t start, stop;
-  // for group commit
-  uint64_t groupCommitStart, groupCommitStop;
   // for garbage collection
   uint64_t GCStart, GCStop;
 
@@ -44,8 +42,11 @@ struct TXExecutor {
   void begin();
   void read(const uint64_t &key);
   void write(const uint64_t &key);
+  void earlyAbort();
   bool validation();
   void writePhase();
+
+  void writeSetClean();
 
   ReadElement<Tuple> *searchReadSet(uint64_t key);
   WriteElement<Tuple> *searchWriteSet(uint64_t key);

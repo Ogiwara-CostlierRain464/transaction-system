@@ -129,7 +129,11 @@ void TXExecutor::read(const uint64_t &key) {
     ver = ver->loadAcquireNext();
   }
   while(ver->status.load(memory_order_acquire) != Committed){
-    while(ver->status.load(memory_order_acquire) == Aborted){
+    // visibleに到達してからpendingでwaitする
+    while(ver->status.load(memory_order_acquire) == Pending){
+    }
+
+    if(ver->status.load(memory_order_acquire) == Aborted){
       ver = ver->loadAcquireNext();
     }
   }
@@ -137,7 +141,7 @@ void TXExecutor::read(const uint64_t &key) {
   memcpy(returnValue, ver->value, VALUE_SIZE);
 
   /**
-   * If read-only TX, not track or validate readSet
+   * If not read-only TX, track or validate readSet
    */
    if(!this->steps.begin()->readOnly){
      readSet.emplace_back(key, tuple, laterVer, ver);
@@ -147,7 +151,47 @@ void TXExecutor::read(const uint64_t &key) {
 void TXExecutor::write(const uint64_t &key) {
   if(searchWriteSet(key)) return;
 
+  Tuple *tuple;
+  // RMWかどうか、のフラグ
+  bool rmw;
+  rmw = false;
+  ReadElement<Tuple> *re;
+  re = searchReadSet(key);
+  if(re){
+    // RMW用の処理
+    rmw = true;
+    tuple = re->recordPtr;
+  }else{
+    tuple = &Table[key];
+  }
 
+  Version *later_ver, *ver;
+  later_ver = nullptr;
+  ver = tuple->loadAcquireLatest();
+
+  if(rmw){
+    // Early abortのため、RMWにはwrite latest version only ruleを適用。
+    // §3.2 の最後
+    if(ver->wts.load(memory_order_acquire) > wts.body){
+      status = Abort;
+      return;
+    }
+  }else{
+    while (ver->wts.load(memory_order_acquire) > wts.body){
+      later_ver = ver;
+      ver = ver->loadAcquireNext();
+    }
+  }
+
+  if((ver->loadAcquireRts() > wts.body)
+    && (ver->loadAcquireStatus() == Committed)){
+    // early abort
+    status = Abort;
+    return;
+  }
+
+  auto new_ver = new Version(0, wts.body);
+  writeSet.emplace_back(key, tuple, later_ver, new_ver, rmw);
 }
 
 bool TXExecutor::validation() {
@@ -171,4 +215,14 @@ WriteElement<Tuple> *TXExecutor::searchWriteSet(uint64_t key) {
     if(op.key == key) return &op;
   }
   return nullptr;
+}
+
+void TXExecutor::earlyAbort() {
+
+}
+
+void TXExecutor::writeSetClean() {
+  for(auto it = writeSet.begin(); it != writeSet.end(); ++it){
+
+  }
 }

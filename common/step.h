@@ -10,7 +10,8 @@
 
 enum Operation: uint8_t{
   Read,
-  Write
+  Write,
+  RMW // Read-Modify-Write
 };
 
 /**

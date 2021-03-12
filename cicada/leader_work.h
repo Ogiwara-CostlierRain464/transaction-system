@@ -27,7 +27,7 @@ static void leaderWork(Backoff &backoff){
   }
 
   if(gcUpdate){
-    uint64_t minWrite = loadAcquire(ThreadWtsArray[1].body); // ０は無視して1から、ここ0では？？？
+    uint64_t minWrite = loadAcquire(ThreadWtsArray[0].body);
     uint64_t minRead;
 
     minRead = loadAcquire(ThreadRtsArray[1].body);
