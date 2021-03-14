@@ -2,6 +2,7 @@
 #include "../common/atomic_wrapper.h"
 #include "../common/step.h"
 #include "../common/debug.h"
+#include "../common/result.h"
 #include "tuple.h"
 #include <cstring>
 
@@ -218,11 +219,61 @@ WriteElement<Tuple> *TXExecutor::searchWriteSet(uint64_t key) {
 }
 
 void TXExecutor::earlyAbort() {
+  writeSetClean();
+  readSet.clear();
 
+  this->wts.setClockBoost(CLOCKS_PER_US);
+  this->status = Abort;
+  ++this->result->localAbortCounts;
 }
 
+// abort時に呼び出し
 void TXExecutor::writeSetClean() {
-  for(auto it = writeSet.begin(); it != writeSet.end(); ++it){
-
+  for(auto & it : writeSet){
+    it.recordPtr->continuingCommit.store(0);
+    if(it.finishVersionInstall){
+      it.newVer->status.store(Aborted);
+    }else{
+      delete it.newVer;
+    }
   }
+  writeSet.clear();
+}
+
+void TXExecutor::maintain() {
+  /**
+   * - GC
+   * - declare quiescent state
+   * - collect garbage created by prior transactions
+   * バージョンリストにおいてMinRtsよりも古いバージョンの中でコミット済み最新のもの
+   * 以外(それより古い)バージョンは全てデリート可能。絶対に到達されないことが保証される.
+   */
+   if(__atomic_load_n(&GCExecuteFlag[threadId].body, __ATOMIC_ACQUIRE) == 1){
+     while (!GCQueue.empty()){
+       if(GCQueue.front().wts >= MinRts.load()) break;
+
+       // (a) acquiring the garbage collection lock succeeds
+       // thread_id == 0 だと、gcLockが0で初期化されているので正しくきのうしない
+       // これはgetGCRightメソッド内で取り扱うべき問題では？
+       if(!GCQueue.front().recordPtr->getGCRight(threadId + 1)){
+         GCQueue.pop_front();
+         continue;
+       }
+
+       Tuple *tuple = GCQueue.front().recordPtr;
+       // (b) v.wts > record.min_wts to ensure this is not dangling prt. §3.8
+       if(GCQueue.front().wts <= tuple->minWts){
+         // すでにもうdeleteされているかも
+         tuple->returnGCRight();
+         GCQueue.pop_front();
+         continue;
+       }
+
+       Version *del_target = GCQueue.front().version->next.load();
+       GCQueue.front().version->next.store(nullptr);
+
+       tuple->minWts.store(GCQueue.front().version->wts);
+//       gggreg
+     }
+   }
 }

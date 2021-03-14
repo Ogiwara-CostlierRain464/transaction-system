@@ -37,6 +37,19 @@ struct TidWord{
   }
 };
 
+template <typename T>
+struct is_atomic{
+  static constexpr bool value =
+    std::is_trivially_copyable<T>::value
+    && std::is_copy_constructible<T>::value
+    && std::is_copy_assignable<T>::value
+    && std::is_move_assignable<T>::value;
+};
+
+static void aaa(){
+
+}
+
 struct Record{
   std::atomic<TidWord> tidWord;
   std::atomic_int value;

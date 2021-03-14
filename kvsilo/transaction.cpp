@@ -2,6 +2,7 @@
 #include "silo_env.h"
 #include <cassert>
 #include <algorithm>
+#include <atomic>
 
 KVSilo::Transaction::Transaction(PrimaryTree *tree, SiloEnv *env_)
 : primaryTree(tree)

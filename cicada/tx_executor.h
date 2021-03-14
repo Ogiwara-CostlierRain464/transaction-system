@@ -48,6 +48,8 @@ struct TXExecutor {
 
   void writeSetClean();
 
+  void maintain();
+
   ReadElement<Tuple> *searchReadSet(uint64_t key);
   WriteElement<Tuple> *searchWriteSet(uint64_t key);
 };

@@ -40,6 +40,10 @@ struct TimeStamp{
 
     body = (localClock << (sizeof(threadId_) * 8)) | threadId_;
   }
+
+  inline void setClockBoost(size_t clock_per_us){
+    clockBoost = clock_per_us;
+  }
 };
 
 #endif //TRANSACTIONSYSTEM_TIME_STAMP_H
